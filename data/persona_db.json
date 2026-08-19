@@ -1,0 +1,315 @@
+{
+  "users": {
+    "99843319": {
+      "id": "99843319",
+      "telegramId": 99843319,
+      "firstName": "Amr",
+      "lastName": "K.",
+      "username": "amr_persona",
+      "photoUrl": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
+      "language": "ar",
+      "role": "admin",
+      "createdAt": "2026-07-20T00:48:13.143Z",
+      "lastLogin": "2026-08-19T00:48:13.144Z",
+      "xp": 450,
+      "level": 3,
+      "badges": [
+        "self_aware",
+        "goal_hunter",
+        "completed_profile",
+        "deep_thinker"
+      ],
+      "referralCode": "PERSONA-7X92",
+      "referralCount": 4,
+      "onboardingCompleted": true,
+      "onboardingData": {
+        "age": "28-35",
+        "gender": "male",
+        "status": "single",
+        "field": "Tech & Strategy",
+        "lifestyle": "active_moderate",
+        "goals": [
+          "self_mastery",
+          "career_growth",
+          "emotional_balance"
+        ],
+        "sleepHours": "7-8",
+        "stressLevel": "moderate"
+      }
+    }
+  },
+  "analysisResults": {
+    "rep_2026_01": {
+      "id": "rep_2026_01",
+      "userId": "99843319",
+      "createdAt": "2026-07-30T00:48:13.144Z",
+      "version": "2026.1",
+      "overallScore": 84,
+      "archetypeId": "strategic-builder",
+      "domainScores": {
+        "cognitive": 88,
+        "emotional": 82,
+        "social": 79,
+        "behavioral": 91,
+        "motivation": 87,
+        "lifestyle": 80,
+        "relationships": 83,
+        "intimacy": 85,
+        "career": 89
+      },
+      "dimensions": [
+        {
+          "name": "analytical_thinking",
+          "nameAr": "التفكير التحليلي",
+          "nameEn": "Analytical Thinking",
+          "category": "cognitive",
+          "score": 92,
+          "benchmark": 65,
+          "descriptionAr": "قدرة استثنائية على تفكيك المشكلات المعقدة.",
+          "descriptionEn": "High ability to deconstruct complex challenges."
+        },
+        {
+          "name": "emotional_awareness",
+          "nameAr": "الوعي العاطفي",
+          "nameEn": "Emotional Awareness",
+          "category": "emotional",
+          "score": 85,
+          "benchmark": 65,
+          "descriptionAr": "إدراك متزن للمشاعر والدوافع.",
+          "descriptionEn": "Grounded awareness of emotions and triggers."
+        },
+        {
+          "name": "discipline",
+          "nameAr": "الانضباط والالتزام",
+          "nameEn": "Discipline",
+          "category": "behavioral",
+          "score": 94,
+          "benchmark": 65,
+          "descriptionAr": "استمرارية عالية في تنفيذ الأهداف طويلة الأجل.",
+          "descriptionEn": "High persistence in executing long-range goals."
+        },
+        {
+          "name": "social_confidence",
+          "nameAr": "الثقة الاجتماعية",
+          "nameEn": "Social Confidence",
+          "category": "social",
+          "score": 78,
+          "benchmark": 65,
+          "descriptionAr": "حضور هادئ ومؤثر في المجموعات.",
+          "descriptionEn": "Calm and effective group presence."
+        },
+        {
+          "name": "ambition",
+          "nameAr": "الطموح والإنجاز",
+          "nameEn": "Ambition",
+          "category": "motivation",
+          "score": 90,
+          "benchmark": 65,
+          "descriptionAr": "رغبة مستمرة في التطور والريادة.",
+          "descriptionEn": "Continuous drive for mastery and leadership."
+        }
+      ],
+      "isUnlockedPremium": true,
+      "completionTimeSeconds": 240
+    }
+  },
+  "notifications": {
+    "notif_01": {
+      "id": "notif_01",
+      "userId": "99843319",
+      "title": "تحليل شخصيتك جاهز 🧠",
+      "message": "اكتمل بناء تقرير الذكاء الشخصي الشامل لنمط \"البنّاء الاستراتيجي\".",
+      "type": "analysis_ready",
+      "read": false,
+      "createdAt": "2026-08-18T22:48:13.144Z",
+      "actionUrl": "/reports/rep_2026_01"
+    },
+    "notif_02": {
+      "id": "notif_02",
+      "userId": "99843319",
+      "title": "وسام جديد مفتوح 🏆",
+      "message": "حصلت على وسام \"الوعي الذاتي العميق\" لإتمام كافة محاور التحليل.",
+      "type": "badge_unlocked",
+      "read": true,
+      "createdAt": "2026-08-18T00:48:13.144Z"
+    }
+  },
+  "referrals": [
+    {
+      "id": "ref_1",
+      "referrerId": "99843319",
+      "referredUserId": "1002",
+      "referredUserName": "سارة م.",
+      "createdAt": "2026-08-04T00:48:13.144Z",
+      "rewardXp": 100,
+      "status": "active"
+    },
+    {
+      "id": "ref_2",
+      "referrerId": "99843319",
+      "referredUserId": "1003",
+      "referredUserName": "طارق ح.",
+      "createdAt": "2026-08-11T00:48:13.144Z",
+      "rewardXp": 100,
+      "status": "active"
+    },
+    {
+      "id": "ref_3",
+      "referrerId": "99843319",
+      "referredUserId": "1004",
+      "referredUserName": "ليلى ع.",
+      "createdAt": "2026-08-16T00:48:13.144Z",
+      "rewardXp": 100,
+      "status": "active"
+    },
+    {
+      "id": "ref_4",
+      "referrerId": "99843319",
+      "referredUserId": "1005",
+      "referredUserName": "كريم ن.",
+      "createdAt": "2026-08-18T00:48:13.144Z",
+      "rewardXp": 100,
+      "status": "active"
+    }
+  ],
+  "growthHistory": {
+    "99843319": [
+      {
+        "date": "2026-01-15",
+        "discipline": 75,
+        "emotionalAwareness": 70,
+        "confidence": 68,
+        "communication": 72,
+        "stressManagement": 65,
+        "overallScore": 70
+      },
+      {
+        "date": "2026-04-10",
+        "discipline": 82,
+        "emotionalAwareness": 76,
+        "confidence": 74,
+        "communication": 78,
+        "stressManagement": 73,
+        "overallScore": 77
+      },
+      {
+        "date": "2026-08-01",
+        "discipline": 91,
+        "emotionalAwareness": 85,
+        "confidence": 82,
+        "communication": 84,
+        "stressManagement": 80,
+        "overallScore": 84
+      }
+    ]
+  },
+  "chatHistory": {},
+  "goals": {
+    "99843319": [
+      {
+        "id": "goal_01",
+        "userId": "99843319",
+        "title": "جلسة تركيز وتخطيط استراتيجي عميق 45 دقيقة يومياً",
+        "category": "focus",
+        "targetFrequency": "daily",
+        "targetDaysPerWeek": 6,
+        "progress": 85,
+        "streak": 5,
+        "createdAt": "2026-08-07T00:48:13.144Z",
+        "lastCheckIn": "2026-08-18T22:48:13.144Z",
+        "checkIns": [
+          {
+            "id": "chk_1",
+            "timestamp": "2026-08-18T00:48:13.144Z",
+            "status": "completed",
+            "note": "أنجزت تخطيط خارطة الطريق الفصلية بدون تشتت.",
+            "aiFeedback": "ممتاز يا عمرو! استمرارك يغذي محور الانضباط (94%) لديك، لكن تذكر إغلاق الشاشات بعدها لحماية طاقتك الذهنية."
+          }
+        ],
+        "aiCheckInPrompt": {
+          "questionAr": "كيف كانت جودة تركيزك اليوم مقارنة بضغط المهام المتراكمة؟",
+          "questionEn": "How was the depth of your focus today amidst task pressure?",
+          "reasoningAr": "بما أن نمطك يميل إلى التفكير التحليلي العالي، فإن أكبر تحدٍ هو التحول إلى الإفراط في التفكير بدلاً من التنفيذ المباشر.",
+          "reasoningEn": "Given your high analytical score, the primary barrier is analysis paralysis.",
+          "archetypeTipAr": "قسّم جلسة الـ 45 دقيقة إلى 3 فترات من 15 دقيقة مع هدف واحد غير قابل للتأجيل.",
+          "archetypeTipEn": "Break your 45m block into 3 x 15m intervals with a single non-negotiable objective."
+        }
+      },
+      {
+        "id": "goal_02",
+        "userId": "99843319",
+        "title": "تهدئة التفكير والتأمل قبل النوم وتنظيم هرمون التوتر",
+        "category": "mindset",
+        "targetFrequency": "daily",
+        "targetDaysPerWeek": 5,
+        "progress": 60,
+        "streak": 3,
+        "createdAt": "2026-08-12T00:48:13.144Z",
+        "lastCheckIn": "2026-08-18T00:48:13.144Z",
+        "checkIns": [
+          {
+            "id": "chk_2",
+            "timestamp": "2026-08-18T00:48:13.144Z",
+            "status": "progressed",
+            "note": "تنفس بطني 10 دقائق وشعرت ببطء نبضات القلب.",
+            "aiFeedback": "خطوة ممتازة لخفض التوتر العصبي وتصفية الذهن قبل النوم."
+          }
+        ],
+        "aiCheckInPrompt": {
+          "questionAr": "هل نجحت في فصل عقلك عن تحديات الغد قبل الاستلقاء؟",
+          "questionEn": "Were you able to detach your mind from tomorrow's challenges before sleeping?",
+          "reasoningAr": "الأنماط الاستراتيجية تميل لحمل خطط الغد إلى السرير، مما يقلل من جودة النوم العميق.",
+          "reasoningEn": "Strategic builders often carry tomorrow's blueprints to bed, impeding REM sleep.",
+          "archetypeTipAr": "اكتب 3 نقاط أساسية على ورقة خارجية قبل 30 دقيقة من النوم لإنهاء معالجة الدماغ.",
+          "archetypeTipEn": "Write down top 3 points on physical paper 30m prior to sleep to signal completion."
+        }
+      },
+      {
+        "id": "goal_03",
+        "userId": "99843319",
+        "title": "تواصل عاطفي وإنساني أسبوعي عميق مع دائرة الثقة",
+        "category": "relationships",
+        "targetFrequency": "weekly",
+        "targetDaysPerWeek": 2,
+        "progress": 70,
+        "streak": 2,
+        "createdAt": "2026-08-05T00:48:13.144Z",
+        "lastCheckIn": "2026-08-17T00:48:13.144Z",
+        "checkIns": [],
+        "aiCheckInPrompt": {
+          "questionAr": "متى كانت آخر محادثة تحدثت فيها بعفوية ودون تحليل منطقي للحلول؟",
+          "questionEn": "When was your last spontaneous conversation without logically analyzing solutions?",
+          "reasoningAr": "توازنك العاطفي يزدهر عندما تشارك مشاعرك الحقيقية وتصغي باهتمام دون وضع خطط إصلاح فورية.",
+          "reasoningEn": "Your emotional health flourishes when listening without attempting to engineer immediate fixes.",
+          "archetypeTipAr": "اسأل الطرف الآخر: \"هل ترغب في الاستماع والمشاركة فقط أم تريد أن نفكر في حلول؟\"",
+          "archetypeTipEn": "Ask: \"Do you want me to just listen and be present, or help brainstorm solutions?\""
+        }
+      }
+    ]
+  },
+  "challenges": {},
+  "auditLogs": [
+    {
+      "id": "log_1",
+      "timestamp": "2026-08-19T00:48:13.144Z",
+      "action": "SYSTEM_BOOT",
+      "userId": "system",
+      "details": "PERSONA AI Server initialized with 12 Archetypes",
+      "status": "success"
+    },
+    {
+      "id": "log_2",
+      "timestamp": "2026-08-19T00:48:08.144Z",
+      "action": "USER_LOGIN",
+      "userId": "99843319",
+      "details": "Telegram WebApp initData validated",
+      "status": "success"
+    }
+  ],
+  "settings": {
+    "maintenanceMode": false,
+    "freeAssessmentQuestionsCount": 15,
+    "premiumPriceUsd": 14.99,
+    "aiModel": "gemini-3.7-flash"
+  }
+}

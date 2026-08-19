@@ -1,0 +1,8 @@
+{
+  "name": "PERSONA — AI Personality Intelligence Platform",
+  "description": "Comprehensive Telegram Bot & Mini App for multidimensional AI personality intelligence, deep psychological insights, archetype scoring, relationship & lifestyle mapping.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

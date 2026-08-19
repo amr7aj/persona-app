@@ -1,0 +1,95 @@
+@import "tailwindcss";
+
+/* =========================================================
+   PERSONA AI - GLOBAL THEME & ERGONOMIC ENGINE
+   ========================================================= */
+
+:root {
+  --bg-primary: #0B0B0F;
+  --bg-secondary: #14141E;
+  --bg-card: #181824;
+  --border-subtle: #242436;
+  --accent-primary: #8B5CF6;
+  --accent-secondary: #F59E0B;
+}
+
+/* 1. Cinematic Slate Dark (Default) */
+.theme-cinematic {
+  --bg-primary: #0B0B0F;
+  --bg-secondary: #14141E;
+  --bg-card: #181824;
+  --border-subtle: #242436;
+  --accent-primary: #8B5CF6;
+  --accent-secondary: #F59E0B;
+  background-color: #0B0B0F;
+}
+
+/* 2. Midnight OLED (Deep pure black) */
+.theme-midnight {
+  --bg-primary: #000000;
+  --bg-secondary: #0A0A0E;
+  --bg-card: #101015;
+  --border-subtle: #1C1C24;
+  --accent-primary: #6366F1;
+  --accent-secondary: #F59E0B;
+  background-color: #000000;
+}
+
+/* 3. Royal Amethyst (Deep purple mystery) */
+.theme-royal {
+  --bg-primary: #0E071A;
+  --bg-secondary: #170C2B;
+  --bg-card: #20123D;
+  --border-subtle: #341D5E;
+  --accent-primary: #A855F7;
+  --accent-secondary: #FBBF24;
+  background-color: #0E071A;
+}
+
+/* 4. Emerald Focus (Zen deep green) */
+.theme-emerald {
+  --bg-primary: #05120E;
+  --bg-secondary: #0A1E17;
+  --bg-card: #0F2C23;
+  --border-subtle: #184436;
+  --accent-primary: #10B981;
+  --accent-secondary: #34D399;
+  background-color: #05120E;
+}
+
+/* =========================================================
+   TYPOGRAPHY SCALING SYSTEM
+   ========================================================= */
+.text-scale-compact {
+  font-size: 0.925rem;
+  letter-spacing: -0.01em;
+}
+
+.text-scale-standard {
+  font-size: 1rem;
+}
+
+.text-scale-comfortable {
+  font-size: 1.075rem;
+  line-height: 1.65;
+}
+
+/* =========================================================
+   REDUCED MOTION SUPPORT
+   ========================================================= */
+.reduced-motion *,
+.reduced-motion *::before,
+.reduced-motion *::after {
+  animation-duration: 0.001s !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001s !important;
+  scroll-behavior: auto !important;
+}
+
+/* =========================================================
+   GHOST MODE / PRIVACY WATERMARKS
+   ========================================================= */
+.privacy-masked {
+  filter: blur(4px);
+  user-select: none;
+}
