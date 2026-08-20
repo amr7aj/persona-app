@@ -875,23 +875,52 @@ async function startServer() {
       res.sendFile(path.join(distPath, 'index.html'));
     });
   }
+   // Health check
+   app.get("/api/health", (_req, res) => {
+    res.status(200).json({
+      success: true,
+      data: {
+        status: "online",
+        service: "PERSONA AI Intelligence Platform",
+        version: "2026.1.0",
+        timestamp: new Date().toISOString(),
+      },
+      message: "Success",
+      status: 200,
+    });
+  });
+
+  // Root
   app.get("/", (_req, res) => {
-    res.json({
-      status: "ok",
-      service: "PERSONA AI Engine",
-      time: new Date().toISOString(),
+    res.status(200).json({
+      success: true,
+      data: {
+        status: "online",
+        service: "PERSONA AI Intelligence Platform",
+        version: "2026.1.0",
+        timestamp: new Date().toISOString(),
+      },
+      message: "Success",
+      status: 200,
     });
   });
-  
-  app.get("/api/health", (_req, res) => {
-    res.json({
-      status: "healthy",
+
+  // SPA fallback — لازم يكون آخر شيء
+  if (process.env.NODE_ENV === "production") {
+    const distPath = path.join(process.cwd(), "dist");
+
+    app.use(express.static(distPath));
+
+    app.get("*", (_req, res) => {
+      res.sendFile(path.join(distPath, "index.html"));
     });
-  });
-  
-  app.listen(PORT, "0.0.0.0", () => {
-    console.log(`[PERSONA AI Engine] Server listening on http://0.0.0.0:${PORT}`);
-  });
   }
-  
-  startServer();
+
+  app.listen(PORT, "0.0.0.0", () => {
+    console.log(
+      `[PERSONA AI Engine] Server listening on http://0.0.0.0:${PORT}`
+    );
+  });
+}
+
+startServer();
