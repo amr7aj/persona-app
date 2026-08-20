@@ -12,7 +12,10 @@ import {
   GrowthChallenge,
 } from "../types";
 
-const API_BASE_URL = "https://persona-app-production-f193.up.railway.app";
+const API_BASE_URL = String(
+  (import.meta as any).env?.VITE_API_BASE_URL ||
+    "https://persona-app-production-f193.up.railway.app"
+).replace(/\/$/, "");
 async function fetchJson<T>(url: string, options?: RequestInit): Promise<T> {
   const token =
     typeof window !== "undefined"
@@ -28,23 +31,39 @@ async function fetchJson<T>(url: string, options?: RequestInit): Promise<T> {
     },
   });
 
-  if (res.status === 401 && typeof window !== "undefined" && url !== "/api/auth/refresh") {
+  if (
+    res.status === 401 &&
+    typeof window !== "undefined" &&
+    url !== "/api/auth/refresh"
+  ) {
     const refreshToken = localStorage.getItem("persona_refresh_token");
     if (refreshToken) {
       try {
         const refreshRes = await fetch(`${API_BASE_URL}/api/auth/refresh`, {
-          method: "POST", headers: { "Content-Type": "application/json" },
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ refreshToken }),
         });
         const refreshJson = await refreshRes.json();
         if (refreshRes.ok && refreshJson.success && refreshJson.data?.token) {
           localStorage.setItem("persona_token", refreshJson.data.token);
-          if (refreshJson.data.refreshToken) localStorage.setItem("persona_refresh_token", refreshJson.data.refreshToken);
+          if (refreshJson.data.refreshToken)
+            localStorage.setItem(
+              "persona_refresh_token",
+              refreshJson.data.refreshToken
+            );
           res = await fetch(`${API_BASE_URL}${url}`, {
-            ...options, headers: { "Content-Type": "application/json", Authorization: `Bearer ${refreshJson.data.token}`, ...(options?.headers || {}) },
+            ...options,
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${refreshJson.data.token}`,
+              ...(options?.headers || {}),
+            },
           });
         }
-      } catch { /* fall through to the original 401 */ }
+      } catch {
+        /* fall through to the original 401 */
+      }
     }
   }
 
@@ -83,7 +102,8 @@ export const Api = {
     );
 
     localStorage.setItem("persona_token", res.token);
-    if ((res as any).refreshToken) localStorage.setItem("persona_refresh_token", (res as any).refreshToken);
+    if ((res as any).refreshToken)
+      localStorage.setItem("persona_refresh_token", (res as any).refreshToken);
     return res;
   },
 
@@ -104,7 +124,8 @@ export const Api = {
     );
 
     localStorage.setItem("persona_token", res.token);
-    if ((res as any).refreshToken) localStorage.setItem("persona_refresh_token", (res as any).refreshToken);
+    if ((res as any).refreshToken)
+      localStorage.setItem("persona_refresh_token", (res as any).refreshToken);
     return res;
   },
 
@@ -121,7 +142,8 @@ export const Api = {
     );
 
     localStorage.setItem("persona_token", res.token);
-    if ((res as any).refreshToken) localStorage.setItem("persona_refresh_token", (res as any).refreshToken);
+    if ((res as any).refreshToken)
+      localStorage.setItem("persona_refresh_token", (res as any).refreshToken);
     return res;
   },
 
