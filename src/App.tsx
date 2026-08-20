@@ -4,7 +4,7 @@ import { Header } from './components/common/Header';
 import { BottomNav } from './components/common/BottomNav';
 import { ShareModal } from './components/common/ShareModal';
 import { PremiumModal } from './components/common/PremiumModal';
-
+import { FloatingCoachWidget } from './components/common/FloatingCoachWidget';
 import { HomeDashboard } from './components/views/HomeDashboard';
 import { OnboardingView } from './components/views/OnboardingView';
 import { AnalysisQuizView } from './components/views/AnalysisQuizView';
@@ -58,13 +58,14 @@ const AppContent: React.FC = () => {
         {currentView === 'reports' && <ReportsHistoryView />}
         {currentView === 'profile' && <UserProfileView />}
         {currentView === 'referrals' && <ReferralHubView />}
-        {currentView === 'bot' && <TelegramBotSimulator />}
+        {/*currentView === 'bot' && <TelegramBotSimulator />*/}
         {currentView === 'admin' && <AdminDashboardView />}
       </main>
 
       <BottomNav />
       <ShareModal />
       <PremiumModal />
+      <FloatingCoachWidget />
     </div>
   );
 };

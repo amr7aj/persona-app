@@ -10,9 +10,9 @@
       "language": "ar",
       "role": "admin",
       "createdAt": "2026-07-20T00:48:13.143Z",
-      "lastLogin": "2026-08-19T00:48:13.144Z",
-      "xp": 450,
-      "level": 3,
+      "lastLogin": "2026-08-19T16:58:42.435Z",
+      "xp": 600,
+      "level": 5,
       "badges": [
         "self_aware",
         "goal_hunter",
@@ -35,6 +35,42 @@
         ],
         "sleepHours": "7-8",
         "stressLevel": "moderate"
+      }
+    },
+    "1787160151884": {
+      "id": "1787160151884",
+      "telegramId": 63897731,
+      "email": "wwww0999843319@gmail.com",
+      "passwordHash": "MTIzNDU2Nzg5",
+      "accountCode": "PERSONA-OYRD53",
+      "firstName": "Amr",
+      "lastName": "Alaal",
+      "username": "wwww0999843319gmail.com",
+      "photoUrl": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
+      "language": "ar",
+      "role": "user",
+      "createdAt": "2026-08-19T17:22:25.220Z",
+      "lastLogin": "2026-08-19T17:22:25.220Z",
+      "xp": 600,
+      "level": 5,
+      "badges": [
+        "explorer",
+        "onboarded",
+        "completed_profile"
+      ],
+      "referralCode": "PERSONA-OYRD53",
+      "referralCount": 0,
+      "onboardingCompleted": true,
+      "onboardingData": {
+        "age": "25-34",
+        "gender": "male",
+        "status": "single",
+        "field": "tech_business",
+        "sleepHours": "7-8",
+        "goals": [
+          "self_mastery",
+          "career_growth"
+        ]
       }
     }
   },
@@ -111,6 +147,1210 @@
       ],
       "isUnlockedPremium": true,
       "completionTimeSeconds": 240
+    },
+    "rep_1787158769060_l0kx": {
+      "id": "rep_1787158769060_l0kx",
+      "userId": "99843319",
+      "createdAt": "2026-08-19T16:59:29.060Z",
+      "version": "2026.1",
+      "overallScore": 60,
+      "archetypeId": "empathetic-catalyst",
+      "domainScores": {
+        "cognitive": 26,
+        "emotional": 86,
+        "social": 79,
+        "behavioral": 40,
+        "motivation": 51,
+        "lifestyle": 70,
+        "relationships": 51,
+        "intimacy": 70,
+        "career": 70
+      },
+      "dimensions": [
+        {
+          "name": "analytical_thinking",
+          "nameAr": "التفكير التحليلي والمنهجي",
+          "nameEn": "Analytical Thinking & Root Cause",
+          "category": "cognitive",
+          "score": 20,
+          "benchmark": 65,
+          "descriptionAr": "مستوى التفكير التحليلي والمنهجي: 20% يعكس توازناً ونمط استجابة متسق.",
+          "descriptionEn": "Analytical Thinking & Root Cause index at 20% reflects consistent behavioral patterns."
+        },
+        {
+          "name": "creativity",
+          "nameAr": "الإبداع والابتكار والتوليد",
+          "nameEn": "Creativity & Cross-Domain Synthesis",
+          "category": "cognitive",
+          "score": 20,
+          "benchmark": 65,
+          "descriptionAr": "مستوى الإبداع والابتكار والتوليد: 20% يعكس توازناً ونمط استجابة متسق.",
+          "descriptionEn": "Creativity & Cross-Domain Synthesis index at 20% reflects consistent behavioral patterns."
+        },
+        {
+          "name": "decision_making",
+          "nameAr": "اتخاذ القرارات في بيئات الغموض",
+          "nameEn": "Decision Making Under Ambiguity",
+          "category": "cognitive",
+          "score": 40,
+          "benchmark": 65,
+          "descriptionAr": "مستوى اتخاذ القرارات في بيئات الغموض: 40% يعكس توازناً ونمط استجابة متسق.",
+          "descriptionEn": "Decision Making Under Ambiguity index at 40% reflects consistent behavioral patterns."
+        },
+        {
+          "name": "emotional_awareness",
+          "nameAr": "الوعي العاطفي الذاتي",
+          "nameEn": "Emotional Self-Awareness",
+          "category": "emotional",
+          "score": 80,
+          "benchmark": 65,
+          "descriptionAr": "مستوى الوعي العاطفي الذاتي: 80% يعكس توازناً ونمط استجابة متسق.",
+          "descriptionEn": "Emotional Self-Awareness index at 80% reflects consistent behavioral patterns."
+        },
+        {
+          "name": "emotional_regulation",
+          "nameAr": "تنظيم المشاعر والمرونة",
+          "nameEn": "Emotional Regulation & Poise",
+          "category": "emotional",
+          "score": 80,
+          "benchmark": 65,
+          "descriptionAr": "مستوى تنظيم المشاعر والمرونة: 80% يعكس توازناً ونمط استجابة متسق.",
+          "descriptionEn": "Emotional Regulation & Poise index at 80% reflects consistent behavioral patterns."
+        },
+        {
+          "name": "empathy",
+          "nameAr": "التعاطف واستشعار الآخرين",
+          "nameEn": "Empathy & Interpersonal Attunement",
+          "category": "emotional",
+          "score": 100,
+          "benchmark": 65,
+          "descriptionAr": "مستوى التعاطف واستشعار الآخرين: 100% يعكس توازناً ونمط استجابة متسق.",
+          "descriptionEn": "Empathy & Interpersonal Attunement index at 100% reflects consistent behavioral patterns."
+        },
+        {
+          "name": "social_energy",
+          "nameAr": "إدارة الطاقة الاجتماعية",
+          "nameEn": "Social Energy & Extroversion",
+          "category": "social",
+          "score": 100,
+          "benchmark": 65,
+          "descriptionAr": "مستوى إدارة الطاقة الاجتماعية: 100% يعكس توازناً ونمط استجابة متسق.",
+          "descriptionEn": "Social Energy & Extroversion index at 100% reflects consistent behavioral patterns."
+        },
+        {
+          "name": "social_confidence",
+          "nameAr": "الثقة والمبادرة الاجتماعية",
+          "nameEn": "Social Presence & Assertiveness",
+          "category": "social",
+          "score": 80,
+          "benchmark": 65,
+          "descriptionAr": "مستوى الثقة والمبادرة الاجتماعية: 80% يعكس توازناً ونمط استجابة متسق.",
+          "descriptionEn": "Social Presence & Assertiveness index at 80% reflects consistent behavioral patterns."
+        },
+        {
+          "name": "communication_style",
+          "nameAr": "أسلوب التواصل والمصارحة",
+          "nameEn": "Communication & Constructive Candor",
+          "category": "social",
+          "score": 60,
+          "benchmark": 65,
+          "descriptionAr": "مستوى أسلوب التواصل والمصارحة: 60% يعكس توازناً ونمط استجابة متسق.",
+          "descriptionEn": "Communication & Constructive Candor index at 60% reflects consistent behavioral patterns."
+        },
+        {
+          "name": "discipline",
+          "nameAr": "الانضباط والالتزام الذاتي",
+          "nameEn": "Discipline & Daily Execution",
+          "category": "behavioral",
+          "score": 40,
+          "benchmark": 65,
+          "descriptionAr": "مستوى الانضباط والالتزام الذاتي: 40% يعكس توازناً ونمط استجابة متسق.",
+          "descriptionEn": "Discipline & Daily Execution index at 40% reflects consistent behavioral patterns."
+        },
+        {
+          "name": "impulsivity",
+          "nameAr": "التحكم في الاندفاع والقرارات",
+          "nameEn": "Impulse Control & Long-Term Bias",
+          "category": "behavioral",
+          "score": 40,
+          "benchmark": 65,
+          "descriptionAr": "مستوى التحكم في الاندفاع والقرارات: 40% يعكس توازناً ونمط استجابة متسق.",
+          "descriptionEn": "Impulse Control & Long-Term Bias index at 40% reflects consistent behavioral patterns."
+        },
+        {
+          "name": "ambition",
+          "nameAr": "الطموح والإنجاز الأسمى",
+          "nameEn": "Ambition & Drive for Mastery",
+          "category": "motivation",
+          "score": 80,
+          "benchmark": 65,
+          "descriptionAr": "مستوى الطموح والإنجاز الأسمى: 80% يعكس توازناً ونمط استجابة متسق.",
+          "descriptionEn": "Ambition & Drive for Mastery index at 80% reflects consistent behavioral patterns."
+        },
+        {
+          "name": "independence",
+          "nameAr": "الاستقلالية والسيادة الشخصية",
+          "nameEn": "Autonomy & Sovereign Independence",
+          "category": "motivation",
+          "score": 20,
+          "benchmark": 65,
+          "descriptionAr": "مستوى الاستقلالية والسيادة الشخصية: 20% يعكس توازناً ونمط استجابة متسق.",
+          "descriptionEn": "Autonomy & Sovereign Independence index at 20% reflects consistent behavioral patterns."
+        },
+        {
+          "name": "sleep_vitality",
+          "nameAr": "جودة النوم والطاقة البدنية",
+          "nameEn": "Sleep Quality & Vitality",
+          "category": "lifestyle",
+          "score": 60,
+          "benchmark": 65,
+          "descriptionAr": "مستوى جودة النوم والطاقة البدنية: 60% يعكس توازناً ونمط استجابة متسق.",
+          "descriptionEn": "Sleep Quality & Vitality index at 60% reflects consistent behavioral patterns."
+        },
+        {
+          "name": "stress_management",
+          "nameAr": "التعامل مع الضغوط والاستشفاء",
+          "nameEn": "Stress Metabolism & Balance",
+          "category": "lifestyle",
+          "score": 80,
+          "benchmark": 65,
+          "descriptionAr": "مستوى التعامل مع الضغوط والاستشفاء: 80% يعكس توازناً ونمط استجابة متسق.",
+          "descriptionEn": "Stress Metabolism & Balance index at 80% reflects consistent behavioral patterns."
+        },
+        {
+          "name": "attachment_tendencies",
+          "nameAr": "نمط التعلق والتقارب العاطفي",
+          "nameEn": "Attachment Style & Relational Closeness",
+          "category": "relationships",
+          "score": 80,
+          "benchmark": 65,
+          "descriptionAr": "مستوى نمط التعلق والتقارب العاطفي: 80% يعكس توازناً ونمط استجابة متسق.",
+          "descriptionEn": "Attachment Style & Relational Closeness index at 80% reflects consistent behavioral patterns."
+        },
+        {
+          "name": "conflict_resolution",
+          "nameAr": "إدارة الخلافات والشراكات",
+          "nameEn": "Conflict Resolution & De-escalation",
+          "category": "relationships",
+          "score": 20,
+          "benchmark": 65,
+          "descriptionAr": "مستوى إدارة الخلافات والشراكات: 20% يعكس توازناً ونمط استجابة متسق.",
+          "descriptionEn": "Conflict Resolution & De-escalation index at 20% reflects consistent behavioral patterns."
+        },
+        {
+          "name": "intimacy_communication",
+          "nameAr": "التواصل والوضوح في الاحتياجات والحدود",
+          "nameEn": "Intimacy Comfort & Transparent Boundaries",
+          "category": "intimacy",
+          "score": 80,
+          "benchmark": 65,
+          "descriptionAr": "مستوى التواصل والوضوح في الاحتياجات والحدود: 80% يعكس توازناً ونمط استجابة متسق.",
+          "descriptionEn": "Intimacy Comfort & Transparent Boundaries index at 80% reflects consistent behavioral patterns."
+        },
+        {
+          "name": "emotional_intimacy_connection",
+          "nameAr": "الترابط العاطفي والتناغم الروحي",
+          "nameEn": "Emotional Connection & Deep Affection",
+          "category": "intimacy",
+          "score": 60,
+          "benchmark": 65,
+          "descriptionAr": "مستوى الترابط العاطفي والتناغم الروحي: 60% يعكس توازناً ونمط استجابة متسق.",
+          "descriptionEn": "Emotional Connection & Deep Affection index at 60% reflects consistent behavioral patterns."
+        },
+        {
+          "name": "career_leadership",
+          "nameAr": "أسلوب القيادة وبيئة العمل المثالية",
+          "nameEn": "Leadership Style & Optimal Work Ecosystem",
+          "category": "career",
+          "score": 80,
+          "benchmark": 65,
+          "descriptionAr": "مستوى أسلوب القيادة وبيئة العمل المثالية: 80% يعكس توازناً ونمط استجابة متسق.",
+          "descriptionEn": "Leadership Style & Optimal Work Ecosystem index at 80% reflects consistent behavioral patterns."
+        },
+        {
+          "name": "career_risk_tolerance",
+          "nameAr": "المخاطرة المالية والريادية",
+          "nameEn": "Professional Risk Appetite & Financial Mindset",
+          "category": "career",
+          "score": 60,
+          "benchmark": 65,
+          "descriptionAr": "مستوى المخاطرة المالية والريادية: 60% يعكس توازناً ونمط استجابة متسق.",
+          "descriptionEn": "Professional Risk Appetite & Financial Mindset index at 60% reflects consistent behavioral patterns."
+        }
+      ],
+      "aiReport": {
+        "executiveSummaryAr": "يُظهر تحليلك السلوكي الشامل لعام 2026 تمتعك بنمط \"المحفّز التعاطفي\" بمرتبة ذكاء كلي تصل إلى 60%. يتميز أسلوبك باتساق ذهني وعاطفي ملحوظ وقدرة على اتخاذ القرارات برؤية هيكلية واستراتيجية.",
+        "executiveSummaryEn": "Your comprehensive 2026 behavioral analysis highlights \"The Empathetic Catalyst\" characteristics with an overall index of 60%. Your profile demonstrates strong cognitive coherence and deliberate strategic decision-making.",
+        "corePersonalityAr": "تمتلك ذكاءً عاطفياً فطرياً وقدرة استثنائية على قراءة ما وراء الكلمات. تشعر بما يشعر به الآخرون وتملك قدرة طبيعية على تحفيز طاقاتهم الكامنة وبناء جسور تواصل عميقة وصادقة.",
+        "corePersonalityEn": "You possess rich natural emotional intelligence, intuitively sensing unspoken needs and inspiring authentic growth in those around you.",
+        "strengthsAr": [
+          "الذكاء العاطفي المرتفع والتعاطف العميق",
+          "القدرة على حل النزاعات وتهدئة التوترات",
+          "تحفيز الآخرين ومساعدتهم على التطور",
+          "بناء علاقات إنسانية عميقة وذات مغزى",
+          "الحدس القوي في قراءة الشخصيات والنوايا"
+        ],
+        "strengthsEn": [
+          "High emotional awareness and deep empathy",
+          "Natural conflict mediation and de-escalation",
+          "Inspiring growth and inner confidence in others",
+          "Forging profound, meaningful bonds",
+          "Keen intuition regarding interpersonal intent"
+        ],
+        "blindSpotsAr": [
+          "امتصاص طاقة ومشاكل الآخرين مما يؤدي إلى الإنهاك العاطفي",
+          "صعوبة وضع حدود حازمة وقول كلمة \"لا\"",
+          "تجنب المواجهات المباشرة خوفاً من إيذاء المشاعر",
+          "إهمال الاحتياجات الشخصية لصالح رعاية الآخرين",
+          "الحساسية المفرطة تجاه النقد حتى لو كان بنّاءً"
+        ],
+        "blindSpotsEn": [
+          "Absorbing collective emotional stress leading to burnout",
+          "Hesitation in enforcing strict personal boundaries",
+          "Avoiding candid confrontation to protect harmony",
+          "Subordinating personal well-being for others",
+          "High sensitivity to critical feedback"
+        ],
+        "emotionalPatternAr": "تميل إلى معالجة المشاعر بطريقة عقلانية متزنة، مع الحرص على عدم التأثر السريع بالانفعالات اللحظية.",
+        "emotionalPatternEn": "You process emotions through a calm, rational filter, maintaining composure in high-friction moments.",
+        "relationshipPatternAr": "تفضل العلاقات العميقة القائمة على الثقة المتبادلة والوضوح الفكري، وتضع حدوداً صحية واضحة.",
+        "relationshipPatternEn": "You prioritize deep, value-aligned connections based on mutual trust and transparent communication.",
+        "workPatternAr": "بيئة العمل المنظمة ذات الأهداف المحددة والمشاريع ذات الأثر الاستراتيجي تطلق أقصى طاقاتك الإنتاجية.",
+        "workPatternEn": "Structured environments with clear milestones and systemic impact maximize your performance.",
+        "stressPatternAr": "عند مواجهة الضغوط الشديدة، تميل إلى الانعزال لإعادة ترتيب الأولويات وصياغة خطط بديلة.",
+        "stressPatternEn": "Under high stress, you retreat to re-evaluate structural priorities and formulate contingency plans.",
+        "lifestylePatternAr": "تستفيد بشكل كبير من الروتين الصباحي المنظم وتخصيص فترات ثابتة للراحة واستعادة الطاقة الذهنية.",
+        "lifestylePatternEn": "You thrive on steady daily routines, consistent sleep cycles, and deliberate mental reset rituals.",
+        "intimacyPatternAr": "تُقدّر الأمان العاطفي، والتواصل الصادق غير المتكلف، والاحترام المتبادل للمساحات الشخصية.",
+        "intimacyPatternEn": "You value emotional safety, authentic vulnerability, and mutual respect for individual boundaries.",
+        "growthOpportunitiesAr": [
+          "تطوير مهارات التفويض وبناء الثقة في فرق العمل",
+          "ممارسة التأمل وتخفيف التوتر العصبي اليومي",
+          "تعزيز التعبير العفوي عن المشاعر والامتنان"
+        ],
+        "growthOpportunitiesEn": [
+          "Cultivating delegation and trust-building within teams",
+          "Practicing mindfulness and daily nervous system regulation",
+          "Enhancing spontaneous expression of warmth and gratitude"
+        ],
+        "personalizedAdviceAr": [
+          "خصص 15 دقيقة في نهاية كل يوم لمراجعة التقدم بدون إصدار أحكام قاسية على الذات.",
+          "اعتمد قاعدة \"الإنجاز بنسبة 80%\" للمهام غير الحرجة لتسريع وتيرة التنفيذ.",
+          "تحدث بوضوح عن احتياجاتك العاطفية في علاقاتك المقربة دون افتراض معرفتهم المسبقة بها."
+        ],
+        "personalizedAdviceEn": [
+          "Dedicate 15 minutes at the end of each day for compassionate self-reflection.",
+          "Adopt the 80% completion rule for non-critical tasks to avoid perfectionist bottlenecks.",
+          "Directly communicate emotional expectations in close relationships rather than assuming unspoken alignment."
+        ],
+        "finalProfileQuoteAr": "«القوة الحقيقية ليست في السيطرة الكاملة على الظروف، بل في فهم الذات وتوجيه الطاقات نحو الأثر الأبقى.»",
+        "finalProfileQuoteEn": "\"True mastery is not total control over external circumstances, but deep self-awareness channeled toward lasting purpose.\""
+      },
+      "isUnlockedPremium": true,
+      "completionTimeSeconds": 180
+    },
+    "rep_1787162227979_b6ny": {
+      "id": "rep_1787162227979_b6ny",
+      "userId": "1787160151884",
+      "createdAt": "2026-08-19T17:57:07.979Z",
+      "version": "2026.1",
+      "overallScore": 64,
+      "archetypeId": "empathetic-catalyst",
+      "domainScores": {
+        "cognitive": 72,
+        "emotional": 82,
+        "social": 53,
+        "behavioral": 69,
+        "motivation": 30,
+        "lifestyle": 59,
+        "relationships": 79,
+        "intimacy": 70,
+        "career": 60
+      },
+      "dimensions": [
+        {
+          "name": "analytical_thinking",
+          "nameAr": "التفكير التحليلي والمنهجي",
+          "nameEn": "Analytical Thinking & Root Cause",
+          "category": "cognitive",
+          "score": 40,
+          "benchmark": 65,
+          "descriptionAr": "مستوى التفكير التحليلي والمنهجي: 40% يعكس توازناً ونمط استجابة متسق.",
+          "descriptionEn": "Analytical Thinking & Root Cause index at 40% reflects consistent behavioral patterns."
+        },
+        {
+          "name": "creativity",
+          "nameAr": "الإبداع والابتكار والتوليد",
+          "nameEn": "Creativity & Cross-Domain Synthesis",
+          "category": "cognitive",
+          "score": 100,
+          "benchmark": 65,
+          "descriptionAr": "مستوى الإبداع والابتكار والتوليد: 100% يعكس توازناً ونمط استجابة متسق.",
+          "descriptionEn": "Creativity & Cross-Domain Synthesis index at 100% reflects consistent behavioral patterns."
+        },
+        {
+          "name": "decision_making",
+          "nameAr": "اتخاذ القرارات في بيئات الغموض",
+          "nameEn": "Decision Making Under Ambiguity",
+          "category": "cognitive",
+          "score": 80,
+          "benchmark": 65,
+          "descriptionAr": "مستوى اتخاذ القرارات في بيئات الغموض: 80% يعكس توازناً ونمط استجابة متسق.",
+          "descriptionEn": "Decision Making Under Ambiguity index at 80% reflects consistent behavioral patterns."
+        },
+        {
+          "name": "emotional_awareness",
+          "nameAr": "الوعي العاطفي الذاتي",
+          "nameEn": "Emotional Self-Awareness",
+          "category": "emotional",
+          "score": 100,
+          "benchmark": 65,
+          "descriptionAr": "مستوى الوعي العاطفي الذاتي: 100% يعكس توازناً ونمط استجابة متسق.",
+          "descriptionEn": "Emotional Self-Awareness index at 100% reflects consistent behavioral patterns."
+        },
+        {
+          "name": "emotional_regulation",
+          "nameAr": "تنظيم المشاعر والمرونة",
+          "nameEn": "Emotional Regulation & Poise",
+          "category": "emotional",
+          "score": 100,
+          "benchmark": 65,
+          "descriptionAr": "مستوى تنظيم المشاعر والمرونة: 100% يعكس توازناً ونمط استجابة متسق.",
+          "descriptionEn": "Emotional Regulation & Poise index at 100% reflects consistent behavioral patterns."
+        },
+        {
+          "name": "empathy",
+          "nameAr": "التعاطف واستشعار الآخرين",
+          "nameEn": "Empathy & Interpersonal Attunement",
+          "category": "emotional",
+          "score": 40,
+          "benchmark": 65,
+          "descriptionAr": "مستوى التعاطف واستشعار الآخرين: 40% يعكس توازناً ونمط استجابة متسق.",
+          "descriptionEn": "Empathy & Interpersonal Attunement index at 40% reflects consistent behavioral patterns."
+        },
+        {
+          "name": "social_energy",
+          "nameAr": "إدارة الطاقة الاجتماعية",
+          "nameEn": "Social Energy & Extroversion",
+          "category": "social",
+          "score": 80,
+          "benchmark": 65,
+          "descriptionAr": "مستوى إدارة الطاقة الاجتماعية: 80% يعكس توازناً ونمط استجابة متسق.",
+          "descriptionEn": "Social Energy & Extroversion index at 80% reflects consistent behavioral patterns."
+        },
+        {
+          "name": "social_confidence",
+          "nameAr": "الثقة والمبادرة الاجتماعية",
+          "nameEn": "Social Presence & Assertiveness",
+          "category": "social",
+          "score": 60,
+          "benchmark": 65,
+          "descriptionAr": "مستوى الثقة والمبادرة الاجتماعية: 60% يعكس توازناً ونمط استجابة متسق.",
+          "descriptionEn": "Social Presence & Assertiveness index at 60% reflects consistent behavioral patterns."
+        },
+        {
+          "name": "communication_style",
+          "nameAr": "أسلوب التواصل والمصارحة",
+          "nameEn": "Communication & Constructive Candor",
+          "category": "social",
+          "score": 20,
+          "benchmark": 65,
+          "descriptionAr": "مستوى أسلوب التواصل والمصارحة: 20% يعكس توازناً ونمط استجابة متسق.",
+          "descriptionEn": "Communication & Constructive Candor index at 20% reflects consistent behavioral patterns."
+        },
+        {
+          "name": "discipline",
+          "nameAr": "الانضباط والالتزام الذاتي",
+          "nameEn": "Discipline & Daily Execution",
+          "category": "behavioral",
+          "score": 60,
+          "benchmark": 65,
+          "descriptionAr": "مستوى الانضباط والالتزام الذاتي: 60% يعكس توازناً ونمط استجابة متسق.",
+          "descriptionEn": "Discipline & Daily Execution index at 60% reflects consistent behavioral patterns."
+        },
+        {
+          "name": "impulsivity",
+          "nameAr": "التحكم في الاندفاع والقرارات",
+          "nameEn": "Impulse Control & Long-Term Bias",
+          "category": "behavioral",
+          "score": 80,
+          "benchmark": 65,
+          "descriptionAr": "مستوى التحكم في الاندفاع والقرارات: 80% يعكس توازناً ونمط استجابة متسق.",
+          "descriptionEn": "Impulse Control & Long-Term Bias index at 80% reflects consistent behavioral patterns."
+        },
+        {
+          "name": "ambition",
+          "nameAr": "الطموح والإنجاز الأسمى",
+          "nameEn": "Ambition & Drive for Mastery",
+          "category": "motivation",
+          "score": 20,
+          "benchmark": 65,
+          "descriptionAr": "مستوى الطموح والإنجاز الأسمى: 20% يعكس توازناً ونمط استجابة متسق.",
+          "descriptionEn": "Ambition & Drive for Mastery index at 20% reflects consistent behavioral patterns."
+        },
+        {
+          "name": "independence",
+          "nameAr": "الاستقلالية والسيادة الشخصية",
+          "nameEn": "Autonomy & Sovereign Independence",
+          "category": "motivation",
+          "score": 40,
+          "benchmark": 65,
+          "descriptionAr": "مستوى الاستقلالية والسيادة الشخصية: 40% يعكس توازناً ونمط استجابة متسق.",
+          "descriptionEn": "Autonomy & Sovereign Independence index at 40% reflects consistent behavioral patterns."
+        },
+        {
+          "name": "sleep_vitality",
+          "nameAr": "جودة النوم والطاقة البدنية",
+          "nameEn": "Sleep Quality & Vitality",
+          "category": "lifestyle",
+          "score": 80,
+          "benchmark": 65,
+          "descriptionAr": "مستوى جودة النوم والطاقة البدنية: 80% يعكس توازناً ونمط استجابة متسق.",
+          "descriptionEn": "Sleep Quality & Vitality index at 80% reflects consistent behavioral patterns."
+        },
+        {
+          "name": "stress_management",
+          "nameAr": "التعامل مع الضغوط والاستشفاء",
+          "nameEn": "Stress Metabolism & Balance",
+          "category": "lifestyle",
+          "score": 40,
+          "benchmark": 65,
+          "descriptionAr": "مستوى التعامل مع الضغوط والاستشفاء: 40% يعكس توازناً ونمط استجابة متسق.",
+          "descriptionEn": "Stress Metabolism & Balance index at 40% reflects consistent behavioral patterns."
+        },
+        {
+          "name": "attachment_tendencies",
+          "nameAr": "نمط التعلق والتقارب العاطفي",
+          "nameEn": "Attachment Style & Relational Closeness",
+          "category": "relationships",
+          "score": 60,
+          "benchmark": 65,
+          "descriptionAr": "مستوى نمط التعلق والتقارب العاطفي: 60% يعكس توازناً ونمط استجابة متسق.",
+          "descriptionEn": "Attachment Style & Relational Closeness index at 60% reflects consistent behavioral patterns."
+        },
+        {
+          "name": "conflict_resolution",
+          "nameAr": "إدارة الخلافات والشراكات",
+          "nameEn": "Conflict Resolution & De-escalation",
+          "category": "relationships",
+          "score": 100,
+          "benchmark": 65,
+          "descriptionAr": "مستوى إدارة الخلافات والشراكات: 100% يعكس توازناً ونمط استجابة متسق.",
+          "descriptionEn": "Conflict Resolution & De-escalation index at 100% reflects consistent behavioral patterns."
+        },
+        {
+          "name": "intimacy_communication",
+          "nameAr": "التواصل والوضوح في الاحتياجات والحدود",
+          "nameEn": "Intimacy Comfort & Transparent Boundaries",
+          "category": "intimacy",
+          "score": 60,
+          "benchmark": 65,
+          "descriptionAr": "مستوى التواصل والوضوح في الاحتياجات والحدود: 60% يعكس توازناً ونمط استجابة متسق.",
+          "descriptionEn": "Intimacy Comfort & Transparent Boundaries index at 60% reflects consistent behavioral patterns."
+        },
+        {
+          "name": "emotional_intimacy_connection",
+          "nameAr": "الترابط العاطفي والتناغم الروحي",
+          "nameEn": "Emotional Connection & Deep Affection",
+          "category": "intimacy",
+          "score": 80,
+          "benchmark": 65,
+          "descriptionAr": "مستوى الترابط العاطفي والتناغم الروحي: 80% يعكس توازناً ونمط استجابة متسق.",
+          "descriptionEn": "Emotional Connection & Deep Affection index at 80% reflects consistent behavioral patterns."
+        },
+        {
+          "name": "career_leadership",
+          "nameAr": "أسلوب القيادة وبيئة العمل المثالية",
+          "nameEn": "Leadership Style & Optimal Work Ecosystem",
+          "category": "career",
+          "score": 60,
+          "benchmark": 65,
+          "descriptionAr": "مستوى أسلوب القيادة وبيئة العمل المثالية: 60% يعكس توازناً ونمط استجابة متسق.",
+          "descriptionEn": "Leadership Style & Optimal Work Ecosystem index at 60% reflects consistent behavioral patterns."
+        },
+        {
+          "name": "career_risk_tolerance",
+          "nameAr": "المخاطرة المالية والريادية",
+          "nameEn": "Professional Risk Appetite & Financial Mindset",
+          "category": "career",
+          "score": 60,
+          "benchmark": 65,
+          "descriptionAr": "مستوى المخاطرة المالية والريادية: 60% يعكس توازناً ونمط استجابة متسق.",
+          "descriptionEn": "Professional Risk Appetite & Financial Mindset index at 60% reflects consistent behavioral patterns."
+        }
+      ],
+      "aiReport": {
+        "executiveSummaryAr": "يُظهر تحليلك السلوكي الشامل لعام 2026 تمتعك بنمط \"المحفّز التعاطفي\" بمرتبة ذكاء كلي تصل إلى 64%. يتميز أسلوبك باتساق ذهني وعاطفي ملحوظ وقدرة على اتخاذ القرارات برؤية هيكلية واستراتيجية.",
+        "executiveSummaryEn": "Your comprehensive 2026 behavioral analysis highlights \"The Empathetic Catalyst\" characteristics with an overall index of 64%. Your profile demonstrates strong cognitive coherence and deliberate strategic decision-making.",
+        "corePersonalityAr": "تمتلك ذكاءً عاطفياً فطرياً وقدرة استثنائية على قراءة ما وراء الكلمات. تشعر بما يشعر به الآخرون وتملك قدرة طبيعية على تحفيز طاقاتهم الكامنة وبناء جسور تواصل عميقة وصادقة.",
+        "corePersonalityEn": "You possess rich natural emotional intelligence, intuitively sensing unspoken needs and inspiring authentic growth in those around you.",
+        "strengthsAr": [
+          "الذكاء العاطفي المرتفع والتعاطف العميق",
+          "القدرة على حل النزاعات وتهدئة التوترات",
+          "تحفيز الآخرين ومساعدتهم على التطور",
+          "بناء علاقات إنسانية عميقة وذات مغزى",
+          "الحدس القوي في قراءة الشخصيات والنوايا"
+        ],
+        "strengthsEn": [
+          "High emotional awareness and deep empathy",
+          "Natural conflict mediation and de-escalation",
+          "Inspiring growth and inner confidence in others",
+          "Forging profound, meaningful bonds",
+          "Keen intuition regarding interpersonal intent"
+        ],
+        "blindSpotsAr": [
+          "امتصاص طاقة ومشاكل الآخرين مما يؤدي إلى الإنهاك العاطفي",
+          "صعوبة وضع حدود حازمة وقول كلمة \"لا\"",
+          "تجنب المواجهات المباشرة خوفاً من إيذاء المشاعر",
+          "إهمال الاحتياجات الشخصية لصالح رعاية الآخرين",
+          "الحساسية المفرطة تجاه النقد حتى لو كان بنّاءً"
+        ],
+        "blindSpotsEn": [
+          "Absorbing collective emotional stress leading to burnout",
+          "Hesitation in enforcing strict personal boundaries",
+          "Avoiding candid confrontation to protect harmony",
+          "Subordinating personal well-being for others",
+          "High sensitivity to critical feedback"
+        ],
+        "emotionalPatternAr": "تميل إلى معالجة المشاعر بطريقة عقلانية متزنة، مع الحرص على عدم التأثر السريع بالانفعالات اللحظية.",
+        "emotionalPatternEn": "You process emotions through a calm, rational filter, maintaining composure in high-friction moments.",
+        "relationshipPatternAr": "تفضل العلاقات العميقة القائمة على الثقة المتبادلة والوضوح الفكري، وتضع حدوداً صحية واضحة.",
+        "relationshipPatternEn": "You prioritize deep, value-aligned connections based on mutual trust and transparent communication.",
+        "workPatternAr": "بيئة العمل المنظمة ذات الأهداف المحددة والمشاريع ذات الأثر الاستراتيجي تطلق أقصى طاقاتك الإنتاجية.",
+        "workPatternEn": "Structured environments with clear milestones and systemic impact maximize your performance.",
+        "stressPatternAr": "عند مواجهة الضغوط الشديدة، تميل إلى الانعزال لإعادة ترتيب الأولويات وصياغة خطط بديلة.",
+        "stressPatternEn": "Under high stress, you retreat to re-evaluate structural priorities and formulate contingency plans.",
+        "lifestylePatternAr": "تستفيد بشكل كبير من الروتين الصباحي المنظم وتخصيص فترات ثابتة للراحة واستعادة الطاقة الذهنية.",
+        "lifestylePatternEn": "You thrive on steady daily routines, consistent sleep cycles, and deliberate mental reset rituals.",
+        "intimacyPatternAr": "تُقدّر الأمان العاطفي، والتواصل الصادق غير المتكلف، والاحترام المتبادل للمساحات الشخصية.",
+        "intimacyPatternEn": "You value emotional safety, authentic vulnerability, and mutual respect for individual boundaries.",
+        "growthOpportunitiesAr": [
+          "تطوير مهارات التفويض وبناء الثقة في فرق العمل",
+          "ممارسة التأمل وتخفيف التوتر العصبي اليومي",
+          "تعزيز التعبير العفوي عن المشاعر والامتنان"
+        ],
+        "growthOpportunitiesEn": [
+          "Cultivating delegation and trust-building within teams",
+          "Practicing mindfulness and daily nervous system regulation",
+          "Enhancing spontaneous expression of warmth and gratitude"
+        ],
+        "personalizedAdviceAr": [
+          "خصص 15 دقيقة في نهاية كل يوم لمراجعة التقدم بدون إصدار أحكام قاسية على الذات.",
+          "اعتمد قاعدة \"الإنجاز بنسبة 80%\" للمهام غير الحرجة لتسريع وتيرة التنفيذ.",
+          "تحدث بوضوح عن احتياجاتك العاطفية في علاقاتك المقربة دون افتراض معرفتهم المسبقة بها."
+        ],
+        "personalizedAdviceEn": [
+          "Dedicate 15 minutes at the end of each day for compassionate self-reflection.",
+          "Adopt the 80% completion rule for non-critical tasks to avoid perfectionist bottlenecks.",
+          "Directly communicate emotional expectations in close relationships rather than assuming unspoken alignment."
+        ],
+        "finalProfileQuoteAr": "«القوة الحقيقية ليست في السيطرة الكاملة على الظروف، بل في فهم الذات وتوجيه الطاقات نحو الأثر الأبقى.»",
+        "finalProfileQuoteEn": "\"True mastery is not total control over external circumstances, but deep self-awareness channeled toward lasting purpose.\""
+      },
+      "isUnlockedPremium": false,
+      "completionTimeSeconds": 180
+    },
+    "rep_1787162450727_f98y": {
+      "id": "rep_1787162450727_f98y",
+      "userId": "1787160151884",
+      "createdAt": "2026-08-19T18:00:50.727Z",
+      "version": "2026.1",
+      "overallScore": 85,
+      "archetypeId": "empathetic-catalyst",
+      "domainScores": {
+        "cognitive": 80,
+        "emotional": 88,
+        "social": 67,
+        "behavioral": 57,
+        "motivation": 100,
+        "lifestyle": 90,
+        "relationships": 100,
+        "intimacy": 81,
+        "career": 100
+      },
+      "dimensions": [
+        {
+          "name": "analytical_thinking",
+          "nameAr": "التفكير التحليلي والمنهجي",
+          "nameEn": "Analytical Thinking & Root Cause",
+          "category": "cognitive",
+          "score": 100,
+          "benchmark": 65,
+          "descriptionAr": "مستوى التفكير التحليلي والمنهجي: 100% يعكس توازناً ونمط استجابة متسق.",
+          "descriptionEn": "Analytical Thinking & Root Cause index at 100% reflects consistent behavioral patterns."
+        },
+        {
+          "name": "creativity",
+          "nameAr": "الإبداع والابتكار والتوليد",
+          "nameEn": "Creativity & Cross-Domain Synthesis",
+          "category": "cognitive",
+          "score": 40,
+          "benchmark": 65,
+          "descriptionAr": "مستوى الإبداع والابتكار والتوليد: 40% يعكس توازناً ونمط استجابة متسق.",
+          "descriptionEn": "Creativity & Cross-Domain Synthesis index at 40% reflects consistent behavioral patterns."
+        },
+        {
+          "name": "decision_making",
+          "nameAr": "اتخاذ القرارات في بيئات الغموض",
+          "nameEn": "Decision Making Under Ambiguity",
+          "category": "cognitive",
+          "score": 100,
+          "benchmark": 65,
+          "descriptionAr": "مستوى اتخاذ القرارات في بيئات الغموض: 100% يعكس توازناً ونمط استجابة متسق.",
+          "descriptionEn": "Decision Making Under Ambiguity index at 100% reflects consistent behavioral patterns."
+        },
+        {
+          "name": "emotional_awareness",
+          "nameAr": "الوعي العاطفي الذاتي",
+          "nameEn": "Emotional Self-Awareness",
+          "category": "emotional",
+          "score": 100,
+          "benchmark": 65,
+          "descriptionAr": "مستوى الوعي العاطفي الذاتي: 100% يعكس توازناً ونمط استجابة متسق.",
+          "descriptionEn": "Emotional Self-Awareness index at 100% reflects consistent behavioral patterns."
+        },
+        {
+          "name": "emotional_regulation",
+          "nameAr": "تنظيم المشاعر والمرونة",
+          "nameEn": "Emotional Regulation & Poise",
+          "category": "emotional",
+          "score": 100,
+          "benchmark": 65,
+          "descriptionAr": "مستوى تنظيم المشاعر والمرونة: 100% يعكس توازناً ونمط استجابة متسق.",
+          "descriptionEn": "Emotional Regulation & Poise index at 100% reflects consistent behavioral patterns."
+        },
+        {
+          "name": "empathy",
+          "nameAr": "التعاطف واستشعار الآخرين",
+          "nameEn": "Empathy & Interpersonal Attunement",
+          "category": "emotional",
+          "score": 60,
+          "benchmark": 65,
+          "descriptionAr": "مستوى التعاطف واستشعار الآخرين: 60% يعكس توازناً ونمط استجابة متسق.",
+          "descriptionEn": "Empathy & Interpersonal Attunement index at 60% reflects consistent behavioral patterns."
+        },
+        {
+          "name": "social_energy",
+          "nameAr": "إدارة الطاقة الاجتماعية",
+          "nameEn": "Social Energy & Extroversion",
+          "category": "social",
+          "score": 60,
+          "benchmark": 65,
+          "descriptionAr": "مستوى إدارة الطاقة الاجتماعية: 60% يعكس توازناً ونمط استجابة متسق.",
+          "descriptionEn": "Social Energy & Extroversion index at 60% reflects consistent behavioral patterns."
+        },
+        {
+          "name": "social_confidence",
+          "nameAr": "الثقة والمبادرة الاجتماعية",
+          "nameEn": "Social Presence & Assertiveness",
+          "category": "social",
+          "score": 100,
+          "benchmark": 65,
+          "descriptionAr": "مستوى الثقة والمبادرة الاجتماعية: 100% يعكس توازناً ونمط استجابة متسق.",
+          "descriptionEn": "Social Presence & Assertiveness index at 100% reflects consistent behavioral patterns."
+        },
+        {
+          "name": "communication_style",
+          "nameAr": "أسلوب التواصل والمصارحة",
+          "nameEn": "Communication & Constructive Candor",
+          "category": "social",
+          "score": 40,
+          "benchmark": 65,
+          "descriptionAr": "مستوى أسلوب التواصل والمصارحة: 40% يعكس توازناً ونمط استجابة متسق.",
+          "descriptionEn": "Communication & Constructive Candor index at 40% reflects consistent behavioral patterns."
+        },
+        {
+          "name": "discipline",
+          "nameAr": "الانضباط والالتزام الذاتي",
+          "nameEn": "Discipline & Daily Execution",
+          "category": "behavioral",
+          "score": 40,
+          "benchmark": 65,
+          "descriptionAr": "مستوى الانضباط والالتزام الذاتي: 40% يعكس توازناً ونمط استجابة متسق.",
+          "descriptionEn": "Discipline & Daily Execution index at 40% reflects consistent behavioral patterns."
+        },
+        {
+          "name": "impulsivity",
+          "nameAr": "التحكم في الاندفاع والقرارات",
+          "nameEn": "Impulse Control & Long-Term Bias",
+          "category": "behavioral",
+          "score": 80,
+          "benchmark": 65,
+          "descriptionAr": "مستوى التحكم في الاندفاع والقرارات: 80% يعكس توازناً ونمط استجابة متسق.",
+          "descriptionEn": "Impulse Control & Long-Term Bias index at 80% reflects consistent behavioral patterns."
+        },
+        {
+          "name": "ambition",
+          "nameAr": "الطموح والإنجاز الأسمى",
+          "nameEn": "Ambition & Drive for Mastery",
+          "category": "motivation",
+          "score": 100,
+          "benchmark": 65,
+          "descriptionAr": "مستوى الطموح والإنجاز الأسمى: 100% يعكس توازناً ونمط استجابة متسق.",
+          "descriptionEn": "Ambition & Drive for Mastery index at 100% reflects consistent behavioral patterns."
+        },
+        {
+          "name": "independence",
+          "nameAr": "الاستقلالية والسيادة الشخصية",
+          "nameEn": "Autonomy & Sovereign Independence",
+          "category": "motivation",
+          "score": 100,
+          "benchmark": 65,
+          "descriptionAr": "مستوى الاستقلالية والسيادة الشخصية: 100% يعكس توازناً ونمط استجابة متسق.",
+          "descriptionEn": "Autonomy & Sovereign Independence index at 100% reflects consistent behavioral patterns."
+        },
+        {
+          "name": "sleep_vitality",
+          "nameAr": "جودة النوم والطاقة البدنية",
+          "nameEn": "Sleep Quality & Vitality",
+          "category": "lifestyle",
+          "score": 100,
+          "benchmark": 65,
+          "descriptionAr": "مستوى جودة النوم والطاقة البدنية: 100% يعكس توازناً ونمط استجابة متسق.",
+          "descriptionEn": "Sleep Quality & Vitality index at 100% reflects consistent behavioral patterns."
+        },
+        {
+          "name": "stress_management",
+          "nameAr": "التعامل مع الضغوط والاستشفاء",
+          "nameEn": "Stress Metabolism & Balance",
+          "category": "lifestyle",
+          "score": 80,
+          "benchmark": 65,
+          "descriptionAr": "مستوى التعامل مع الضغوط والاستشفاء: 80% يعكس توازناً ونمط استجابة متسق.",
+          "descriptionEn": "Stress Metabolism & Balance index at 80% reflects consistent behavioral patterns."
+        },
+        {
+          "name": "attachment_tendencies",
+          "nameAr": "نمط التعلق والتقارب العاطفي",
+          "nameEn": "Attachment Style & Relational Closeness",
+          "category": "relationships",
+          "score": 100,
+          "benchmark": 65,
+          "descriptionAr": "مستوى نمط التعلق والتقارب العاطفي: 100% يعكس توازناً ونمط استجابة متسق.",
+          "descriptionEn": "Attachment Style & Relational Closeness index at 100% reflects consistent behavioral patterns."
+        },
+        {
+          "name": "conflict_resolution",
+          "nameAr": "إدارة الخلافات والشراكات",
+          "nameEn": "Conflict Resolution & De-escalation",
+          "category": "relationships",
+          "score": 100,
+          "benchmark": 65,
+          "descriptionAr": "مستوى إدارة الخلافات والشراكات: 100% يعكس توازناً ونمط استجابة متسق.",
+          "descriptionEn": "Conflict Resolution & De-escalation index at 100% reflects consistent behavioral patterns."
+        },
+        {
+          "name": "intimacy_communication",
+          "nameAr": "التواصل والوضوح في الاحتياجات والحدود",
+          "nameEn": "Intimacy Comfort & Transparent Boundaries",
+          "category": "intimacy",
+          "score": 100,
+          "benchmark": 65,
+          "descriptionAr": "مستوى التواصل والوضوح في الاحتياجات والحدود: 100% يعكس توازناً ونمط استجابة متسق.",
+          "descriptionEn": "Intimacy Comfort & Transparent Boundaries index at 100% reflects consistent behavioral patterns."
+        },
+        {
+          "name": "emotional_intimacy_connection",
+          "nameAr": "الترابط العاطفي والتناغم الروحي",
+          "nameEn": "Emotional Connection & Deep Affection",
+          "category": "intimacy",
+          "score": 60,
+          "benchmark": 65,
+          "descriptionAr": "مستوى الترابط العاطفي والتناغم الروحي: 60% يعكس توازناً ونمط استجابة متسق.",
+          "descriptionEn": "Emotional Connection & Deep Affection index at 60% reflects consistent behavioral patterns."
+        },
+        {
+          "name": "career_leadership",
+          "nameAr": "أسلوب القيادة وبيئة العمل المثالية",
+          "nameEn": "Leadership Style & Optimal Work Ecosystem",
+          "category": "career",
+          "score": 100,
+          "benchmark": 65,
+          "descriptionAr": "مستوى أسلوب القيادة وبيئة العمل المثالية: 100% يعكس توازناً ونمط استجابة متسق.",
+          "descriptionEn": "Leadership Style & Optimal Work Ecosystem index at 100% reflects consistent behavioral patterns."
+        },
+        {
+          "name": "career_risk_tolerance",
+          "nameAr": "المخاطرة المالية والريادية",
+          "nameEn": "Professional Risk Appetite & Financial Mindset",
+          "category": "career",
+          "score": 100,
+          "benchmark": 65,
+          "descriptionAr": "مستوى المخاطرة المالية والريادية: 100% يعكس توازناً ونمط استجابة متسق.",
+          "descriptionEn": "Professional Risk Appetite & Financial Mindset index at 100% reflects consistent behavioral patterns."
+        }
+      ],
+      "aiReport": {
+        "executiveSummaryAr": "يُظهر تحليلك السلوكي الشامل لعام 2026 تمتعك بنمط \"المحفّز التعاطفي\" بمرتبة ذكاء كلي تصل إلى 85%. يتميز أسلوبك باتساق ذهني وعاطفي ملحوظ وقدرة على اتخاذ القرارات برؤية هيكلية واستراتيجية.",
+        "executiveSummaryEn": "Your comprehensive 2026 behavioral analysis highlights \"The Empathetic Catalyst\" characteristics with an overall index of 85%. Your profile demonstrates strong cognitive coherence and deliberate strategic decision-making.",
+        "corePersonalityAr": "تمتلك ذكاءً عاطفياً فطرياً وقدرة استثنائية على قراءة ما وراء الكلمات. تشعر بما يشعر به الآخرون وتملك قدرة طبيعية على تحفيز طاقاتهم الكامنة وبناء جسور تواصل عميقة وصادقة.",
+        "corePersonalityEn": "You possess rich natural emotional intelligence, intuitively sensing unspoken needs and inspiring authentic growth in those around you.",
+        "strengthsAr": [
+          "الذكاء العاطفي المرتفع والتعاطف العميق",
+          "القدرة على حل النزاعات وتهدئة التوترات",
+          "تحفيز الآخرين ومساعدتهم على التطور",
+          "بناء علاقات إنسانية عميقة وذات مغزى",
+          "الحدس القوي في قراءة الشخصيات والنوايا"
+        ],
+        "strengthsEn": [
+          "High emotional awareness and deep empathy",
+          "Natural conflict mediation and de-escalation",
+          "Inspiring growth and inner confidence in others",
+          "Forging profound, meaningful bonds",
+          "Keen intuition regarding interpersonal intent"
+        ],
+        "blindSpotsAr": [
+          "امتصاص طاقة ومشاكل الآخرين مما يؤدي إلى الإنهاك العاطفي",
+          "صعوبة وضع حدود حازمة وقول كلمة \"لا\"",
+          "تجنب المواجهات المباشرة خوفاً من إيذاء المشاعر",
+          "إهمال الاحتياجات الشخصية لصالح رعاية الآخرين",
+          "الحساسية المفرطة تجاه النقد حتى لو كان بنّاءً"
+        ],
+        "blindSpotsEn": [
+          "Absorbing collective emotional stress leading to burnout",
+          "Hesitation in enforcing strict personal boundaries",
+          "Avoiding candid confrontation to protect harmony",
+          "Subordinating personal well-being for others",
+          "High sensitivity to critical feedback"
+        ],
+        "emotionalPatternAr": "تميل إلى معالجة المشاعر بطريقة عقلانية متزنة، مع الحرص على عدم التأثر السريع بالانفعالات اللحظية.",
+        "emotionalPatternEn": "You process emotions through a calm, rational filter, maintaining composure in high-friction moments.",
+        "relationshipPatternAr": "تفضل العلاقات العميقة القائمة على الثقة المتبادلة والوضوح الفكري، وتضع حدوداً صحية واضحة.",
+        "relationshipPatternEn": "You prioritize deep, value-aligned connections based on mutual trust and transparent communication.",
+        "workPatternAr": "بيئة العمل المنظمة ذات الأهداف المحددة والمشاريع ذات الأثر الاستراتيجي تطلق أقصى طاقاتك الإنتاجية.",
+        "workPatternEn": "Structured environments with clear milestones and systemic impact maximize your performance.",
+        "stressPatternAr": "عند مواجهة الضغوط الشديدة، تميل إلى الانعزال لإعادة ترتيب الأولويات وصياغة خطط بديلة.",
+        "stressPatternEn": "Under high stress, you retreat to re-evaluate structural priorities and formulate contingency plans.",
+        "lifestylePatternAr": "تستفيد بشكل كبير من الروتين الصباحي المنظم وتخصيص فترات ثابتة للراحة واستعادة الطاقة الذهنية.",
+        "lifestylePatternEn": "You thrive on steady daily routines, consistent sleep cycles, and deliberate mental reset rituals.",
+        "intimacyPatternAr": "تُقدّر الأمان العاطفي، والتواصل الصادق غير المتكلف، والاحترام المتبادل للمساحات الشخصية.",
+        "intimacyPatternEn": "You value emotional safety, authentic vulnerability, and mutual respect for individual boundaries.",
+        "growthOpportunitiesAr": [
+          "تطوير مهارات التفويض وبناء الثقة في فرق العمل",
+          "ممارسة التأمل وتخفيف التوتر العصبي اليومي",
+          "تعزيز التعبير العفوي عن المشاعر والامتنان"
+        ],
+        "growthOpportunitiesEn": [
+          "Cultivating delegation and trust-building within teams",
+          "Practicing mindfulness and daily nervous system regulation",
+          "Enhancing spontaneous expression of warmth and gratitude"
+        ],
+        "personalizedAdviceAr": [
+          "خصص 15 دقيقة في نهاية كل يوم لمراجعة التقدم بدون إصدار أحكام قاسية على الذات.",
+          "اعتمد قاعدة \"الإنجاز بنسبة 80%\" للمهام غير الحرجة لتسريع وتيرة التنفيذ.",
+          "تحدث بوضوح عن احتياجاتك العاطفية في علاقاتك المقربة دون افتراض معرفتهم المسبقة بها."
+        ],
+        "personalizedAdviceEn": [
+          "Dedicate 15 minutes at the end of each day for compassionate self-reflection.",
+          "Adopt the 80% completion rule for non-critical tasks to avoid perfectionist bottlenecks.",
+          "Directly communicate emotional expectations in close relationships rather than assuming unspoken alignment."
+        ],
+        "finalProfileQuoteAr": "«القوة الحقيقية ليست في السيطرة الكاملة على الظروف، بل في فهم الذات وتوجيه الطاقات نحو الأثر الأبقى.»",
+        "finalProfileQuoteEn": "\"True mastery is not total control over external circumstances, but deep self-awareness channeled toward lasting purpose.\""
+      },
+      "isUnlockedPremium": false,
+      "completionTimeSeconds": 180
+    },
+    "rep_1787162549749_tz8u": {
+      "id": "rep_1787162549749_tz8u",
+      "userId": "1787160151884",
+      "createdAt": "2026-08-19T18:02:29.749Z",
+      "version": "2026.1",
+      "overallScore": 74,
+      "archetypeId": "empathetic-catalyst",
+      "domainScores": {
+        "cognitive": 93,
+        "emotional": 93,
+        "social": 80,
+        "behavioral": 60,
+        "motivation": 50,
+        "lifestyle": 50,
+        "relationships": 70,
+        "intimacy": 80,
+        "career": 90
+      },
+      "dimensions": [
+        {
+          "name": "analytical_thinking",
+          "nameAr": "التفكير التحليلي والمنهجي",
+          "nameEn": "Analytical Thinking & Root Cause",
+          "category": "cognitive",
+          "score": 100,
+          "benchmark": 65,
+          "descriptionAr": "مستوى التفكير التحليلي والمنهجي: 100% يعكس توازناً ونمط استجابة متسق.",
+          "descriptionEn": "Analytical Thinking & Root Cause index at 100% reflects consistent behavioral patterns."
+        },
+        {
+          "name": "creativity",
+          "nameAr": "الإبداع والابتكار والتوليد",
+          "nameEn": "Creativity & Cross-Domain Synthesis",
+          "category": "cognitive",
+          "score": 80,
+          "benchmark": 65,
+          "descriptionAr": "مستوى الإبداع والابتكار والتوليد: 80% يعكس توازناً ونمط استجابة متسق.",
+          "descriptionEn": "Creativity & Cross-Domain Synthesis index at 80% reflects consistent behavioral patterns."
+        },
+        {
+          "name": "decision_making",
+          "nameAr": "اتخاذ القرارات في بيئات الغموض",
+          "nameEn": "Decision Making Under Ambiguity",
+          "category": "cognitive",
+          "score": 100,
+          "benchmark": 65,
+          "descriptionAr": "مستوى اتخاذ القرارات في بيئات الغموض: 100% يعكس توازناً ونمط استجابة متسق.",
+          "descriptionEn": "Decision Making Under Ambiguity index at 100% reflects consistent behavioral patterns."
+        },
+        {
+          "name": "emotional_awareness",
+          "nameAr": "الوعي العاطفي الذاتي",
+          "nameEn": "Emotional Self-Awareness",
+          "category": "emotional",
+          "score": 80,
+          "benchmark": 65,
+          "descriptionAr": "مستوى الوعي العاطفي الذاتي: 80% يعكس توازناً ونمط استجابة متسق.",
+          "descriptionEn": "Emotional Self-Awareness index at 80% reflects consistent behavioral patterns."
+        },
+        {
+          "name": "emotional_regulation",
+          "nameAr": "تنظيم المشاعر والمرونة",
+          "nameEn": "Emotional Regulation & Poise",
+          "category": "emotional",
+          "score": 100,
+          "benchmark": 65,
+          "descriptionAr": "مستوى تنظيم المشاعر والمرونة: 100% يعكس توازناً ونمط استجابة متسق.",
+          "descriptionEn": "Emotional Regulation & Poise index at 100% reflects consistent behavioral patterns."
+        },
+        {
+          "name": "empathy",
+          "nameAr": "التعاطف واستشعار الآخرين",
+          "nameEn": "Empathy & Interpersonal Attunement",
+          "category": "emotional",
+          "score": 100,
+          "benchmark": 65,
+          "descriptionAr": "مستوى التعاطف واستشعار الآخرين: 100% يعكس توازناً ونمط استجابة متسق.",
+          "descriptionEn": "Empathy & Interpersonal Attunement index at 100% reflects consistent behavioral patterns."
+        },
+        {
+          "name": "social_energy",
+          "nameAr": "إدارة الطاقة الاجتماعية",
+          "nameEn": "Social Energy & Extroversion",
+          "category": "social",
+          "score": 80,
+          "benchmark": 65,
+          "descriptionAr": "مستوى إدارة الطاقة الاجتماعية: 80% يعكس توازناً ونمط استجابة متسق.",
+          "descriptionEn": "Social Energy & Extroversion index at 80% reflects consistent behavioral patterns."
+        },
+        {
+          "name": "social_confidence",
+          "nameAr": "الثقة والمبادرة الاجتماعية",
+          "nameEn": "Social Presence & Assertiveness",
+          "category": "social",
+          "score": 80,
+          "benchmark": 65,
+          "descriptionAr": "مستوى الثقة والمبادرة الاجتماعية: 80% يعكس توازناً ونمط استجابة متسق.",
+          "descriptionEn": "Social Presence & Assertiveness index at 80% reflects consistent behavioral patterns."
+        },
+        {
+          "name": "communication_style",
+          "nameAr": "أسلوب التواصل والمصارحة",
+          "nameEn": "Communication & Constructive Candor",
+          "category": "social",
+          "score": 80,
+          "benchmark": 65,
+          "descriptionAr": "مستوى أسلوب التواصل والمصارحة: 80% يعكس توازناً ونمط استجابة متسق.",
+          "descriptionEn": "Communication & Constructive Candor index at 80% reflects consistent behavioral patterns."
+        },
+        {
+          "name": "discipline",
+          "nameAr": "الانضباط والالتزام الذاتي",
+          "nameEn": "Discipline & Daily Execution",
+          "category": "behavioral",
+          "score": 60,
+          "benchmark": 65,
+          "descriptionAr": "مستوى الانضباط والالتزام الذاتي: 60% يعكس توازناً ونمط استجابة متسق.",
+          "descriptionEn": "Discipline & Daily Execution index at 60% reflects consistent behavioral patterns."
+        },
+        {
+          "name": "impulsivity",
+          "nameAr": "التحكم في الاندفاع والقرارات",
+          "nameEn": "Impulse Control & Long-Term Bias",
+          "category": "behavioral",
+          "score": 60,
+          "benchmark": 65,
+          "descriptionAr": "مستوى التحكم في الاندفاع والقرارات: 60% يعكس توازناً ونمط استجابة متسق.",
+          "descriptionEn": "Impulse Control & Long-Term Bias index at 60% reflects consistent behavioral patterns."
+        },
+        {
+          "name": "ambition",
+          "nameAr": "الطموح والإنجاز الأسمى",
+          "nameEn": "Ambition & Drive for Mastery",
+          "category": "motivation",
+          "score": 40,
+          "benchmark": 65,
+          "descriptionAr": "مستوى الطموح والإنجاز الأسمى: 40% يعكس توازناً ونمط استجابة متسق.",
+          "descriptionEn": "Ambition & Drive for Mastery index at 40% reflects consistent behavioral patterns."
+        },
+        {
+          "name": "independence",
+          "nameAr": "الاستقلالية والسيادة الشخصية",
+          "nameEn": "Autonomy & Sovereign Independence",
+          "category": "motivation",
+          "score": 60,
+          "benchmark": 65,
+          "descriptionAr": "مستوى الاستقلالية والسيادة الشخصية: 60% يعكس توازناً ونمط استجابة متسق.",
+          "descriptionEn": "Autonomy & Sovereign Independence index at 60% reflects consistent behavioral patterns."
+        },
+        {
+          "name": "sleep_vitality",
+          "nameAr": "جودة النوم والطاقة البدنية",
+          "nameEn": "Sleep Quality & Vitality",
+          "category": "lifestyle",
+          "score": 40,
+          "benchmark": 65,
+          "descriptionAr": "مستوى جودة النوم والطاقة البدنية: 40% يعكس توازناً ونمط استجابة متسق.",
+          "descriptionEn": "Sleep Quality & Vitality index at 40% reflects consistent behavioral patterns."
+        },
+        {
+          "name": "stress_management",
+          "nameAr": "التعامل مع الضغوط والاستشفاء",
+          "nameEn": "Stress Metabolism & Balance",
+          "category": "lifestyle",
+          "score": 60,
+          "benchmark": 65,
+          "descriptionAr": "مستوى التعامل مع الضغوط والاستشفاء: 60% يعكس توازناً ونمط استجابة متسق.",
+          "descriptionEn": "Stress Metabolism & Balance index at 60% reflects consistent behavioral patterns."
+        },
+        {
+          "name": "attachment_tendencies",
+          "nameAr": "نمط التعلق والتقارب العاطفي",
+          "nameEn": "Attachment Style & Relational Closeness",
+          "category": "relationships",
+          "score": 80,
+          "benchmark": 65,
+          "descriptionAr": "مستوى نمط التعلق والتقارب العاطفي: 80% يعكس توازناً ونمط استجابة متسق.",
+          "descriptionEn": "Attachment Style & Relational Closeness index at 80% reflects consistent behavioral patterns."
+        },
+        {
+          "name": "conflict_resolution",
+          "nameAr": "إدارة الخلافات والشراكات",
+          "nameEn": "Conflict Resolution & De-escalation",
+          "category": "relationships",
+          "score": 60,
+          "benchmark": 65,
+          "descriptionAr": "مستوى إدارة الخلافات والشراكات: 60% يعكس توازناً ونمط استجابة متسق.",
+          "descriptionEn": "Conflict Resolution & De-escalation index at 60% reflects consistent behavioral patterns."
+        },
+        {
+          "name": "intimacy_communication",
+          "nameAr": "التواصل والوضوح في الاحتياجات والحدود",
+          "nameEn": "Intimacy Comfort & Transparent Boundaries",
+          "category": "intimacy",
+          "score": 80,
+          "benchmark": 65,
+          "descriptionAr": "مستوى التواصل والوضوح في الاحتياجات والحدود: 80% يعكس توازناً ونمط استجابة متسق.",
+          "descriptionEn": "Intimacy Comfort & Transparent Boundaries index at 80% reflects consistent behavioral patterns."
+        },
+        {
+          "name": "emotional_intimacy_connection",
+          "nameAr": "الترابط العاطفي والتناغم الروحي",
+          "nameEn": "Emotional Connection & Deep Affection",
+          "category": "intimacy",
+          "score": 80,
+          "benchmark": 65,
+          "descriptionAr": "مستوى الترابط العاطفي والتناغم الروحي: 80% يعكس توازناً ونمط استجابة متسق.",
+          "descriptionEn": "Emotional Connection & Deep Affection index at 80% reflects consistent behavioral patterns."
+        },
+        {
+          "name": "career_leadership",
+          "nameAr": "أسلوب القيادة وبيئة العمل المثالية",
+          "nameEn": "Leadership Style & Optimal Work Ecosystem",
+          "category": "career",
+          "score": 100,
+          "benchmark": 65,
+          "descriptionAr": "مستوى أسلوب القيادة وبيئة العمل المثالية: 100% يعكس توازناً ونمط استجابة متسق.",
+          "descriptionEn": "Leadership Style & Optimal Work Ecosystem index at 100% reflects consistent behavioral patterns."
+        },
+        {
+          "name": "career_risk_tolerance",
+          "nameAr": "المخاطرة المالية والريادية",
+          "nameEn": "Professional Risk Appetite & Financial Mindset",
+          "category": "career",
+          "score": 80,
+          "benchmark": 65,
+          "descriptionAr": "مستوى المخاطرة المالية والريادية: 80% يعكس توازناً ونمط استجابة متسق.",
+          "descriptionEn": "Professional Risk Appetite & Financial Mindset index at 80% reflects consistent behavioral patterns."
+        }
+      ],
+      "aiReport": {
+        "executiveSummaryAr": "يُظهر تحليلك السلوكي الشامل لعام 2026 تمتعك بنمط \"المحفّز التعاطفي\" بمرتبة ذكاء كلي تصل إلى 74%. يتميز أسلوبك باتساق ذهني وعاطفي ملحوظ وقدرة على اتخاذ القرارات برؤية هيكلية واستراتيجية.",
+        "executiveSummaryEn": "Your comprehensive 2026 behavioral analysis highlights \"The Empathetic Catalyst\" characteristics with an overall index of 74%. Your profile demonstrates strong cognitive coherence and deliberate strategic decision-making.",
+        "corePersonalityAr": "تمتلك ذكاءً عاطفياً فطرياً وقدرة استثنائية على قراءة ما وراء الكلمات. تشعر بما يشعر به الآخرون وتملك قدرة طبيعية على تحفيز طاقاتهم الكامنة وبناء جسور تواصل عميقة وصادقة.",
+        "corePersonalityEn": "You possess rich natural emotional intelligence, intuitively sensing unspoken needs and inspiring authentic growth in those around you.",
+        "strengthsAr": [
+          "الذكاء العاطفي المرتفع والتعاطف العميق",
+          "القدرة على حل النزاعات وتهدئة التوترات",
+          "تحفيز الآخرين ومساعدتهم على التطور",
+          "بناء علاقات إنسانية عميقة وذات مغزى",
+          "الحدس القوي في قراءة الشخصيات والنوايا"
+        ],
+        "strengthsEn": [
+          "High emotional awareness and deep empathy",
+          "Natural conflict mediation and de-escalation",
+          "Inspiring growth and inner confidence in others",
+          "Forging profound, meaningful bonds",
+          "Keen intuition regarding interpersonal intent"
+        ],
+        "blindSpotsAr": [
+          "امتصاص طاقة ومشاكل الآخرين مما يؤدي إلى الإنهاك العاطفي",
+          "صعوبة وضع حدود حازمة وقول كلمة \"لا\"",
+          "تجنب المواجهات المباشرة خوفاً من إيذاء المشاعر",
+          "إهمال الاحتياجات الشخصية لصالح رعاية الآخرين",
+          "الحساسية المفرطة تجاه النقد حتى لو كان بنّاءً"
+        ],
+        "blindSpotsEn": [
+          "Absorbing collective emotional stress leading to burnout",
+          "Hesitation in enforcing strict personal boundaries",
+          "Avoiding candid confrontation to protect harmony",
+          "Subordinating personal well-being for others",
+          "High sensitivity to critical feedback"
+        ],
+        "emotionalPatternAr": "تميل إلى معالجة المشاعر بطريقة عقلانية متزنة، مع الحرص على عدم التأثر السريع بالانفعالات اللحظية.",
+        "emotionalPatternEn": "You process emotions through a calm, rational filter, maintaining composure in high-friction moments.",
+        "relationshipPatternAr": "تفضل العلاقات العميقة القائمة على الثقة المتبادلة والوضوح الفكري، وتضع حدوداً صحية واضحة.",
+        "relationshipPatternEn": "You prioritize deep, value-aligned connections based on mutual trust and transparent communication.",
+        "workPatternAr": "بيئة العمل المنظمة ذات الأهداف المحددة والمشاريع ذات الأثر الاستراتيجي تطلق أقصى طاقاتك الإنتاجية.",
+        "workPatternEn": "Structured environments with clear milestones and systemic impact maximize your performance.",
+        "stressPatternAr": "عند مواجهة الضغوط الشديدة، تميل إلى الانعزال لإعادة ترتيب الأولويات وصياغة خطط بديلة.",
+        "stressPatternEn": "Under high stress, you retreat to re-evaluate structural priorities and formulate contingency plans.",
+        "lifestylePatternAr": "تستفيد بشكل كبير من الروتين الصباحي المنظم وتخصيص فترات ثابتة للراحة واستعادة الطاقة الذهنية.",
+        "lifestylePatternEn": "You thrive on steady daily routines, consistent sleep cycles, and deliberate mental reset rituals.",
+        "intimacyPatternAr": "تُقدّر الأمان العاطفي، والتواصل الصادق غير المتكلف، والاحترام المتبادل للمساحات الشخصية.",
+        "intimacyPatternEn": "You value emotional safety, authentic vulnerability, and mutual respect for individual boundaries.",
+        "growthOpportunitiesAr": [
+          "تطوير مهارات التفويض وبناء الثقة في فرق العمل",
+          "ممارسة التأمل وتخفيف التوتر العصبي اليومي",
+          "تعزيز التعبير العفوي عن المشاعر والامتنان"
+        ],
+        "growthOpportunitiesEn": [
+          "Cultivating delegation and trust-building within teams",
+          "Practicing mindfulness and daily nervous system regulation",
+          "Enhancing spontaneous expression of warmth and gratitude"
+        ],
+        "personalizedAdviceAr": [
+          "خصص 15 دقيقة في نهاية كل يوم لمراجعة التقدم بدون إصدار أحكام قاسية على الذات.",
+          "اعتمد قاعدة \"الإنجاز بنسبة 80%\" للمهام غير الحرجة لتسريع وتيرة التنفيذ.",
+          "تحدث بوضوح عن احتياجاتك العاطفية في علاقاتك المقربة دون افتراض معرفتهم المسبقة بها."
+        ],
+        "personalizedAdviceEn": [
+          "Dedicate 15 minutes at the end of each day for compassionate self-reflection.",
+          "Adopt the 80% completion rule for non-critical tasks to avoid perfectionist bottlenecks.",
+          "Directly communicate emotional expectations in close relationships rather than assuming unspoken alignment."
+        ],
+        "finalProfileQuoteAr": "«القوة الحقيقية ليست في السيطرة الكاملة على الظروف، بل في فهم الذات وتوجيه الطاقات نحو الأثر الأبقى.»",
+        "finalProfileQuoteEn": "\"True mastery is not total control over external circumstances, but deep self-awareness channeled toward lasting purpose.\""
+      },
+      "isUnlockedPremium": false,
+      "completionTimeSeconds": 180
     }
   },
   "notifications": {
@@ -132,6 +1372,64 @@
       "type": "badge_unlocked",
       "read": true,
       "createdAt": "2026-08-18T00:48:13.144Z"
+    },
+    "notif_1787158769063_118": {
+      "id": "notif_1787158769063_118",
+      "userId": "99843319",
+      "title": "تحليل شخصيتك الجديد مكتمل 🧠",
+      "message": "تم تحليل إجاباتك بنجاح. نمطك هو: المحفّز التعاطفي",
+      "type": "analysis_ready",
+      "read": false,
+      "createdAt": "2026-08-19T16:59:29.063Z",
+      "actionUrl": "/reports/rep_1787158769060_l0kx"
+    },
+    "notif_1787160153993_578": {
+      "id": "notif_1787160153993_578",
+      "userId": "1787160151884",
+      "title": "وسام جديد مفتوح 🎖️",
+      "message": "تهانينا! لقد حصلت على وسام جديد: onboarded",
+      "type": "badge_unlocked",
+      "read": false,
+      "createdAt": "2026-08-19T17:22:33.993Z"
+    },
+    "notif_1787162227979_308": {
+      "id": "notif_1787162227979_308",
+      "userId": "1787160151884",
+      "title": "وسام جديد مفتوح 🎖️",
+      "message": "تهانينا! لقد حصلت على وسام جديد: completed_profile",
+      "type": "badge_unlocked",
+      "read": false,
+      "createdAt": "2026-08-19T17:57:07.979Z"
+    },
+    "notif_1787162227983_258": {
+      "id": "notif_1787162227983_258",
+      "userId": "1787160151884",
+      "title": "تحليل شخصيتك الجديد مكتمل 🧠",
+      "message": "تم تحليل إجاباتك بنجاح. نمطك هو: المحفّز التعاطفي",
+      "type": "analysis_ready",
+      "read": false,
+      "createdAt": "2026-08-19T17:57:07.983Z",
+      "actionUrl": "/reports/rep_1787162227979_b6ny"
+    },
+    "notif_1787162450737_565": {
+      "id": "notif_1787162450737_565",
+      "userId": "1787160151884",
+      "title": "تحليل شخصيتك الجديد مكتمل 🧠",
+      "message": "تم تحليل إجاباتك بنجاح. نمطك هو: المحفّز التعاطفي",
+      "type": "analysis_ready",
+      "read": false,
+      "createdAt": "2026-08-19T18:00:50.737Z",
+      "actionUrl": "/reports/rep_1787162450727_f98y"
+    },
+    "notif_1787162549752_565": {
+      "id": "notif_1787162549752_565",
+      "userId": "1787160151884",
+      "title": "تحليل شخصيتك الجديد مكتمل 🧠",
+      "message": "تم تحليل إجاباتك بنجاح. نمطك هو: المحفّز التعاطفي",
+      "type": "analysis_ready",
+      "read": false,
+      "createdAt": "2026-08-19T18:02:29.752Z",
+      "actionUrl": "/reports/rep_1787162549749_tz8u"
     }
   },
   "referrals": [
@@ -200,10 +1498,351 @@
         "communication": 84,
         "stressManagement": 80,
         "overallScore": 84
+      },
+      {
+        "date": "2026-08-19",
+        "discipline": 40,
+        "emotionalAwareness": 86,
+        "confidence": 79,
+        "communication": 79,
+        "stressManagement": 70,
+        "overallScore": 60
+      }
+    ],
+    "1787160151884": [
+      {
+        "date": "2026-08-19",
+        "discipline": 69,
+        "emotionalAwareness": 82,
+        "confidence": 53,
+        "communication": 53,
+        "stressManagement": 59,
+        "overallScore": 64
+      },
+      {
+        "date": "2026-08-19",
+        "discipline": 57,
+        "emotionalAwareness": 88,
+        "confidence": 67,
+        "communication": 67,
+        "stressManagement": 90,
+        "overallScore": 85
+      },
+      {
+        "date": "2026-08-19",
+        "discipline": 60,
+        "emotionalAwareness": 93,
+        "confidence": 80,
+        "communication": 80,
+        "stressManagement": 50,
+        "overallScore": 74
       }
     ]
   },
-  "chatHistory": {},
+  "chatHistory": {
+    "1787160151884": [
+      {
+        "id": "msg_1787163167911",
+        "userId": "1787160151884",
+        "role": "user",
+        "text": "🧠 ما هي أبرز نقاط قوتي وفق تحليلي؟",
+        "timestamp": "2026-08-19T18:12:47.911Z"
+      },
+      {
+        "id": "msg_bot_1787163167916",
+        "userId": "1787160151884",
+        "role": "model",
+        "text": "أهلاً <b>Amr</b> 📊.. حين أنظر إلى خريطتك البيانية كنمط <b>المحفّز التعاطفي</b>، أرى توازناً فريداً:\n\n• <b>محور العقل والتحليل (93%):</b> يمنحك وضوحاً فكرياً حاداً وقدرة على رؤية ما وراء السطور.\n• <b>محور الانضباط والدافعية (90%):</b> مؤشر مرتفع يوضح أنك شخص لا يقبل بأنصاف الحلول ويسعى للأثر الحقيقي.\n• <b>محور الذكاء الاجتماعي والعاطفي (93%):</b> يمثل منطقة النمو الأجمل؛ حيث يمكنك استثمار مشاعرك كبوصلة دقيقة وليس فقط كمنطق جاف.\n\nأيّ من هذه الأبعاد تشعر أنه يحتاج منك وقفة وتغذية خاصة في هذه المرحلة؟",
+        "timestamp": "2026-08-19T18:12:47.916Z",
+        "suggestedQuestions": [
+          "📖 احكيلي قصة ملهمة تناسب شخصيتي",
+          "📊 حلل بياناتي ومحاوري النفسية بعمق",
+          "☕ كيف أتعامل مع ضغوط العمل والتفكير الزائد؟",
+          "🎭 اختبرني في معضلة قيادية واقعية"
+        ]
+      },
+      {
+        "id": "msg_1787163175954",
+        "userId": "1787160151884",
+        "role": "user",
+        "text": "📖 احكيلي قصة ملهمة تناسب شخصيتي",
+        "timestamp": "2026-08-19T18:12:55.955Z"
+      },
+      {
+        "id": "msg_bot_1787163175958",
+        "userId": "1787160151884",
+        "role": "model",
+        "text": "أهلاً يا <b>Amr</b>.. دعني أشاركك هذه القصة الصغيرة التي تلمس عمق نمط <b>المحفّز التعاطفي</b>:\n\nيُحكى أن نحّاتاً بارعاً قضى أشهراً طويلة أمام صخرة ضخمة من الرخام لم يمسسها بإزميله، بينما كان الناس يظنونه عاجزاً أو متردداً. وحين سألوه: <i>«لماذا لا تبدأ بالعمل؟»</i>، ابتسم وقال: <i>«أنا لا أنحت شكلاً جديداً، بل أراقب الصخرة حتى أرى التمثال المحبوس داخلها بوضوح، وما الإزميل إلا وسيلة لإزالة الزوائد فقط.»</i>\n\nوهكذا هو عقلك يا <b>Amr</b>؛ تحليلك العميق وتفكيرك قبل اتخاذ القرار ليس تردداً، بل هو تلك الرؤية التي ترى النتيجة النهائية قبل أن تبدأ. التحدي الوحيد هو ألا تطيل الوقوف أمام الصخرة أكثر مما ينبغي.\n\nما رأيك، في أي جوانب حياتك الآن تشعر أنك تدقق في الصخرة وتنتظر اللحظة المثالية للبدء؟",
+        "timestamp": "2026-08-19T18:12:55.958Z",
+        "suggestedQuestions": [
+          "📖 احكيلي قصة ملهمة تناسب شخصيتي",
+          "📊 حلل بياناتي ومحاوري النفسية بعمق",
+          "☕ كيف أتعامل مع ضغوط العمل والتفكير الزائد؟",
+          "🎭 اختبرني في معضلة قيادية واقعية"
+        ]
+      },
+      {
+        "id": "msg_1787163183193",
+        "userId": "1787160151884",
+        "role": "user",
+        "text": "📖 احكيلي قصة ملهمة تناسب شخصيتي",
+        "timestamp": "2026-08-19T18:13:03.193Z"
+      },
+      {
+        "id": "msg_bot_1787163183208",
+        "userId": "1787160151884",
+        "role": "model",
+        "text": "أهلاً يا <b>Amr</b>.. دعني أشاركك هذه القصة الصغيرة التي تلمس عمق نمط <b>المحفّز التعاطفي</b>:\n\nيُحكى أن نحّاتاً بارعاً قضى أشهراً طويلة أمام صخرة ضخمة من الرخام لم يمسسها بإزميله، بينما كان الناس يظنونه عاجزاً أو متردداً. وحين سألوه: <i>«لماذا لا تبدأ بالعمل؟»</i>، ابتسم وقال: <i>«أنا لا أنحت شكلاً جديداً، بل أراقب الصخرة حتى أرى التمثال المحبوس داخلها بوضوح، وما الإزميل إلا وسيلة لإزالة الزوائد فقط.»</i>\n\nوهكذا هو عقلك يا <b>Amr</b>؛ تحليلك العميق وتفكيرك قبل اتخاذ القرار ليس تردداً، بل هو تلك الرؤية التي ترى النتيجة النهائية قبل أن تبدأ. التحدي الوحيد هو ألا تطيل الوقوف أمام الصخرة أكثر مما ينبغي.\n\nما رأيك، في أي جوانب حياتك الآن تشعر أنك تدقق في الصخرة وتنتظر اللحظة المثالية للبدء؟",
+        "timestamp": "2026-08-19T18:13:03.208Z",
+        "suggestedQuestions": [
+          "📖 احكيلي قصة ملهمة تناسب شخصيتي",
+          "📊 حلل بياناتي ومحاوري النفسية بعمق",
+          "☕ كيف أتعامل مع ضغوط العمل والتفكير الزائد؟",
+          "🎭 اختبرني في معضلة قيادية واقعية"
+        ]
+      },
+      {
+        "id": "msg_1787163227850",
+        "userId": "1787160151884",
+        "role": "user",
+        "text": "📊 حلل بياناتي ومحاوري النفسية بعمق",
+        "timestamp": "2026-08-19T18:13:47.850Z"
+      },
+      {
+        "id": "msg_bot_1787163227859",
+        "userId": "1787160151884",
+        "role": "model",
+        "text": "أهلاً <b>Amr</b> 📊.. حين أنظر إلى خريطتك البيانية كنمط <b>المحفّز التعاطفي</b>، أرى توازناً فريداً:\n\n• <b>محور العقل والتحليل (93%):</b> يمنحك وضوحاً فكرياً حاداً وقدرة على رؤية ما وراء السطور.\n• <b>محور الانضباط والدافعية (90%):</b> مؤشر مرتفع يوضح أنك شخص لا يقبل بأنصاف الحلول ويسعى للأثر الحقيقي.\n• <b>محور الذكاء الاجتماعي والعاطفي (93%):</b> يمثل منطقة النمو الأجمل؛ حيث يمكنك استثمار مشاعرك كبوصلة دقيقة وليس فقط كمنطق جاف.\n\nأيّ من هذه الأبعاد تشعر أنه يحتاج منك وقفة وتغذية خاصة في هذه المرحلة؟",
+        "timestamp": "2026-08-19T18:13:47.859Z",
+        "suggestedQuestions": [
+          "📖 احكيلي قصة ملهمة تناسب شخصيتي",
+          "📊 حلل بياناتي ومحاوري النفسية بعمق",
+          "☕ كيف أتعامل مع ضغوط العمل والتفكير الزائد؟",
+          "🎭 اختبرني في معضلة قيادية واقعية"
+        ]
+      },
+      {
+        "id": "msg_1787163237875",
+        "userId": "1787160151884",
+        "role": "user",
+        "text": "☕ كيف أتعامل مع ضغوط العمل والتفكير الزائد؟",
+        "timestamp": "2026-08-19T18:13:57.875Z"
+      },
+      {
+        "id": "msg_bot_1787163237879",
+        "userId": "1787160151884",
+        "role": "model",
+        "text": "أهلاً بك يا <b>Amr</b>.. أسمعك بكل اهتمام.\n\nمن خلال متابعتي لنمطك النفسي كـ <b>المحفّز التعاطفي</b>، أعلم تماماً أنك لا تبحث عن نصائح سطحية أو عبارات تحفيز معلبة، بل عن حوار حقيقي يلامس ما تشعر به ويفكك التحديات بذكاء وهدوء.\n\nأخبرني، ما الذي يشغل تفكيرك أو يدور في ذهنك اليوم؟ سواء كان موقفاً في العمل، قراراً في علاقاتك، أو حتى شعوراً بالرغبة في إعادة ترتيب أولوياتك الشخصية.",
+        "timestamp": "2026-08-19T18:13:57.879Z",
+        "suggestedQuestions": [
+          "📖 احكيلي قصة ملهمة تناسب شخصيتي",
+          "📊 حلل بياناتي ومحاوري النفسية بعمق",
+          "☕ كيف أتعامل مع ضغوط العمل والتفكير الزائد؟",
+          "🎭 اختبرني في معضلة قيادية واقعية"
+        ]
+      },
+      {
+        "id": "msg_1787163313248",
+        "userId": "1787160151884",
+        "role": "user",
+        "text": "كيقفك",
+        "timestamp": "2026-08-19T18:15:13.248Z"
+      },
+      {
+        "id": "msg_bot_1787163313254",
+        "userId": "1787160151884",
+        "role": "model",
+        "text": "أهلاً بك يا <b>Amr</b>.. أسمعك بكل اهتمام.\n\nمن خلال متابعتي لنمطك النفسي كـ <b>المحفّز التعاطفي</b>، أعلم تماماً أنك لا تبحث عن نصائح سطحية أو عبارات تحفيز معلبة، بل عن حوار حقيقي يلامس ما تشعر به ويفكك التحديات بذكاء وهدوء.\n\nأخبرني، ما الذي يشغل تفكيرك أو يدور في ذهنك اليوم؟ سواء كان موقفاً في العمل، قراراً في علاقاتك، أو حتى شعوراً بالرغبة في إعادة ترتيب أولوياتك الشخصية.",
+        "timestamp": "2026-08-19T18:15:13.254Z",
+        "suggestedQuestions": [
+          "📖 احكيلي قصة ملهمة تناسب شخصيتي",
+          "📊 حلل بياناتي ومحاوري النفسية بعمق",
+          "☕ كيف أتعامل مع ضغوط العمل والتفكير الزائد؟",
+          "🎭 اختبرني في معضلة قيادية واقعية"
+        ]
+      },
+      {
+        "id": "msg_1787163323560",
+        "userId": "1787160151884",
+        "role": "user",
+        "text": "كيفك",
+        "timestamp": "2026-08-19T18:15:23.560Z"
+      },
+      {
+        "id": "msg_bot_1787163323566",
+        "userId": "1787160151884",
+        "role": "model",
+        "text": "أهلاً بك يا <b>Amr</b>.. أسمعك بكل اهتمام.\n\nمن خلال متابعتي لنمطك النفسي كـ <b>المحفّز التعاطفي</b>، أعلم تماماً أنك لا تبحث عن نصائح سطحية أو عبارات تحفيز معلبة، بل عن حوار حقيقي يلامس ما تشعر به ويفكك التحديات بذكاء وهدوء.\n\nأخبرني، ما الذي يشغل تفكيرك أو يدور في ذهنك اليوم؟ سواء كان موقفاً في العمل، قراراً في علاقاتك، أو حتى شعوراً بالرغبة في إعادة ترتيب أولوياتك الشخصية.",
+        "timestamp": "2026-08-19T18:15:23.566Z",
+        "suggestedQuestions": [
+          "📖 احكيلي قصة ملهمة تناسب شخصيتي",
+          "📊 حلل بياناتي ومحاوري النفسية بعمق",
+          "☕ كيف أتعامل مع ضغوط العمل والتفكير الزائد؟",
+          "🎭 اختبرني في معضلة قيادية واقعية"
+        ]
+      },
+      {
+        "id": "msg_1787164571946",
+        "userId": "1787160151884",
+        "role": "user",
+        "text": "أعطني موقفاً آخر أكثر تعقيداً",
+        "timestamp": "2026-08-19T18:36:11.946Z"
+      },
+      {
+        "id": "msg_bot_1787164571954",
+        "userId": "1787160151884",
+        "role": "model",
+        "text": "أهلاً بك يا <b>Amr</b>.. أسمعك بكل اهتمام.\n\nمن خلال متابعتي لنمطك النفسي كـ <b>المحفّز التعاطفي</b>، أعلم تماماً أنك لا تبحث عن نصائح سطحية أو عبارات تحفيز معلبة، بل عن حوار حقيقي يلامس ما تشعر به ويفكك التحديات بذكاء وهدوء.\n\nأخبرني، ما الذي يشغل تفكيرك أو يدور في ذهنك اليوم؟ سواء كان موقفاً في العمل، قراراً في علاقاتك، أو حتى شعوراً بالرغبة في إعادة ترتيب أولوياتك الشخصية.",
+        "timestamp": "2026-08-19T18:36:11.954Z",
+        "suggestedQuestions": [
+          "📖 احكيلي قصة ملهمة تناسب شخصيتي",
+          "📊 حلل بياناتي ومحاوري النفسية بعمق",
+          "☕ كيف أتعامل مع ضغوط العمل والتفكير الزائد؟",
+          "🎭 اختبرني في معضلة قيادية واقعية"
+        ]
+      },
+      {
+        "id": "msg_1787170282114",
+        "userId": "1787160151884",
+        "role": "user",
+        "text": "📊 حلل بياناتي ومحاوري النفسية بعمق",
+        "timestamp": "2026-08-19T20:11:22.114Z"
+      },
+      {
+        "id": "msg_bot_1787170282126",
+        "userId": "1787160151884",
+        "role": "model",
+        "text": "أهلاً <b>Amr</b> 📊.. حين أنظر إلى خريطتك البيانية كنمط <b>المحفّز التعاطفي</b>، أرى توازناً فريداً:\n\n• <b>محور العقل والتحليل (93%):</b> يمنحك وضوحاً فكرياً حاداً وقدرة على رؤية ما وراء السطور.\n• <b>محور الانضباط والدافعية (90%):</b> مؤشر مرتفع يوضح أنك شخص لا يقبل بأنصاف الحلول ويسعى للأثر الحقيقي.\n• <b>محور الذكاء الاجتماعي والعاطفي (93%):</b> يمثل منطقة النمو الأجمل؛ حيث يمكنك استثمار مشاعرك كبوصلة دقيقة وليس فقط كمنطق جاف.\n\nأيّ من هذه الأبعاد تشعر أنه يحتاج منك وقفة وتغذية خاصة في هذه المرحلة؟",
+        "timestamp": "2026-08-19T20:11:22.127Z",
+        "suggestedQuestions": [
+          "📖 احكيلي قصة ملهمة تناسب شخصيتي",
+          "📊 حلل بياناتي ومحاوري النفسية بعمق",
+          "☕ كيف أتعامل مع ضغوط العمل والتفكير الزائد؟",
+          "🎭 اختبرني في معضلة قيادية واقعية"
+        ]
+      },
+      {
+        "id": "msg_1787170300565",
+        "userId": "1787160151884",
+        "role": "user",
+        "text": "شو اعمل",
+        "timestamp": "2026-08-19T20:11:40.565Z"
+      },
+      {
+        "id": "msg_bot_1787170300578",
+        "userId": "1787160151884",
+        "role": "model",
+        "text": "أهلاً بك يا <b>Amr</b>.. أسمعك بكل اهتمام.\n\nمن خلال متابعتي لنمطك النفسي كـ <b>المحفّز التعاطفي</b>، أعلم تماماً أنك لا تبحث عن نصائح سطحية أو عبارات تحفيز معلبة، بل عن حوار حقيقي يلامس ما تشعر به ويفكك التحديات بذكاء وهدوء.\n\nأخبرني، ما الذي يشغل تفكيرك أو يدور في ذهنك اليوم؟ سواء كان موقفاً في العمل، قراراً في علاقاتك، أو حتى شعوراً بالرغبة في إعادة ترتيب أولوياتك الشخصية.",
+        "timestamp": "2026-08-19T20:11:40.579Z",
+        "suggestedQuestions": [
+          "📖 احكيلي قصة ملهمة تناسب شخصيتي",
+          "📊 حلل بياناتي ومحاوري النفسية بعمق",
+          "☕ كيف أتعامل مع ضغوط العمل والتفكير الزائد؟",
+          "🎭 اختبرني في معضلة قيادية واقعية"
+        ]
+      },
+      {
+        "id": "msg_1787175760890",
+        "userId": "1787160151884",
+        "role": "user",
+        "text": "📖 احكيلي قصة ملهمة تناسب نمطي",
+        "timestamp": "2026-08-19T21:42:40.890Z"
+      },
+      {
+        "id": "msg_bot_1787175760899",
+        "userId": "1787160151884",
+        "role": "model",
+        "text": "أهلاً يا <b>Amr</b>.. دعني أشاركك هذه القصة الصغيرة التي تلمس عمق نمط <b>المحفّز التعاطفي</b>:\n\nيُحكى أن نحّاتاً بارعاً قضى أشهراً طويلة أمام صخرة ضخمة من الرخام لم يمسسها بإزميله، بينما كان الناس يظنونه عاجزاً أو متردداً. وحين سألوه: <i>«لماذا لا تبدأ بالعمل؟»</i>، ابتسم وقال: <i>«أنا لا أنحت شكلاً جديداً، بل أراقب الصخرة حتى أرى التمثال المحبوس داخلها بوضوح، وما الإزميل إلا وسيلة لإزالة الزوائد فقط.»</i>\n\nوهكذا هو عقلك يا <b>Amr</b>؛ تحليلك العميق وتفكيرك قبل اتخاذ القرار ليس تردداً، بل هو تلك الرؤية التي ترى النتيجة النهائية قبل أن تبدأ. التحدي الوحيد هو ألا تطيل الوقوف أمام الصخرة أكثر مما ينبغي.\n\nما رأيك، في أي جوانب حياتك الآن تشعر أنك تدقق في الصخرة وتنتظر اللحظة المثالية للبدء؟",
+        "timestamp": "2026-08-19T21:42:40.899Z",
+        "suggestedQuestions": [
+          "📖 احكيلي قصة ملهمة تناسب شخصيتي",
+          "📊 حلل بياناتي ومحاوري النفسية بعمق",
+          "☕ كيف أتعامل مع ضغوط العمل والتفكير الزائد؟",
+          "🎭 اختبرني في معضلة قيادية واقعية"
+        ]
+      },
+      {
+        "id": "msg_1787175773047",
+        "userId": "1787160151884",
+        "role": "user",
+        "text": "أتحمل المسؤولية، أبلغ الإدارة فوراً وأطلب مهلة للتصحيح",
+        "timestamp": "2026-08-19T21:42:53.047Z"
+      },
+      {
+        "id": "msg_bot_1787175773051",
+        "userId": "1787160151884",
+        "role": "model",
+        "text": "أهلاً بك يا <b>Amr</b>.. أسمعك بكل اهتمام.\n\nمن خلال متابعتي لنمطك النفسي كـ <b>المحفّز التعاطفي</b>، أعلم تماماً أنك لا تبحث عن نصائح سطحية أو عبارات تحفيز معلبة، بل عن حوار حقيقي يلامس ما تشعر به ويفكك التحديات بذكاء وهدوء.\n\nأخبرني، ما الذي يشغل تفكيرك أو يدور في ذهنك اليوم؟ سواء كان موقفاً في العمل، قراراً في علاقاتك، أو حتى شعوراً بالرغبة في إعادة ترتيب أولوياتك الشخصية.",
+        "timestamp": "2026-08-19T21:42:53.051Z",
+        "suggestedQuestions": [
+          "📖 احكيلي قصة ملهمة تناسب شخصيتي",
+          "📊 حلل بياناتي ومحاوري النفسية بعمق",
+          "☕ كيف أتعامل مع ضغوط العمل والتفكير الزائد؟",
+          "🎭 اختبرني في معضلة قيادية واقعية"
+        ]
+      },
+      {
+        "id": "msg_1787175786708",
+        "userId": "1787160151884",
+        "role": "user",
+        "text": "مرخبا",
+        "timestamp": "2026-08-19T21:43:06.708Z"
+      },
+      {
+        "id": "msg_bot_1787175786717",
+        "userId": "1787160151884",
+        "role": "model",
+        "text": "أهلاً بك يا <b>Amr</b>.. أسمعك بكل اهتمام.\n\nمن خلال متابعتي لنمطك النفسي كـ <b>المحفّز التعاطفي</b>، أعلم تماماً أنك لا تبحث عن نصائح سطحية أو عبارات تحفيز معلبة، بل عن حوار حقيقي يلامس ما تشعر به ويفكك التحديات بذكاء وهدوء.\n\nأخبرني، ما الذي يشغل تفكيرك أو يدور في ذهنك اليوم؟ سواء كان موقفاً في العمل، قراراً في علاقاتك، أو حتى شعوراً بالرغبة في إعادة ترتيب أولوياتك الشخصية.",
+        "timestamp": "2026-08-19T21:43:06.717Z",
+        "suggestedQuestions": [
+          "📖 احكيلي قصة ملهمة تناسب شخصيتي",
+          "📊 حلل بياناتي ومحاوري النفسية بعمق",
+          "☕ كيف أتعامل مع ضغوط العمل والتفكير الزائد؟",
+          "🎭 اختبرني في معضلة قيادية واقعية"
+        ]
+      },
+      {
+        "id": "msg_1787175798773",
+        "userId": "1787160151884",
+        "role": "user",
+        "text": "مرحبا",
+        "timestamp": "2026-08-19T21:43:18.773Z"
+      },
+      {
+        "id": "msg_bot_1787175798778",
+        "userId": "1787160151884",
+        "role": "model",
+        "text": "أهلاً بك يا <b>Amr</b>.. أسمعك بكل اهتمام.\n\nمن خلال متابعتي لنمطك النفسي كـ <b>المحفّز التعاطفي</b>، أعلم تماماً أنك لا تبحث عن نصائح سطحية أو عبارات تحفيز معلبة، بل عن حوار حقيقي يلامس ما تشعر به ويفكك التحديات بذكاء وهدوء.\n\nأخبرني، ما الذي يشغل تفكيرك أو يدور في ذهنك اليوم؟ سواء كان موقفاً في العمل، قراراً في علاقاتك، أو حتى شعوراً بالرغبة في إعادة ترتيب أولوياتك الشخصية.",
+        "timestamp": "2026-08-19T21:43:18.778Z",
+        "suggestedQuestions": [
+          "📖 احكيلي قصة ملهمة تناسب شخصيتي",
+          "📊 حلل بياناتي ومحاوري النفسية بعمق",
+          "☕ كيف أتعامل مع ضغوط العمل والتفكير الزائد؟",
+          "🎭 اختبرني في معضلة قيادية واقعية"
+        ]
+      },
+      {
+        "id": "msg_1787175834089",
+        "userId": "1787160151884",
+        "role": "user",
+        "text": "📖 احكيلي قصة ملهمة تناسب نمطي",
+        "timestamp": "2026-08-19T21:43:54.089Z"
+      },
+      {
+        "id": "msg_bot_1787175834092",
+        "userId": "1787160151884",
+        "role": "model",
+        "text": "أهلاً يا <b>Amr</b>.. دعني أشاركك هذه القصة الصغيرة التي تلمس عمق نمط <b>المحفّز التعاطفي</b>:\n\nيُحكى أن نحّاتاً بارعاً قضى أشهراً طويلة أمام صخرة ضخمة من الرخام لم يمسسها بإزميله، بينما كان الناس يظنونه عاجزاً أو متردداً. وحين سألوه: <i>«لماذا لا تبدأ بالعمل؟»</i>، ابتسم وقال: <i>«أنا لا أنحت شكلاً جديداً، بل أراقب الصخرة حتى أرى التمثال المحبوس داخلها بوضوح، وما الإزميل إلا وسيلة لإزالة الزوائد فقط.»</i>\n\nوهكذا هو عقلك يا <b>Amr</b>؛ تحليلك العميق وتفكيرك قبل اتخاذ القرار ليس تردداً، بل هو تلك الرؤية التي ترى النتيجة النهائية قبل أن تبدأ. التحدي الوحيد هو ألا تطيل الوقوف أمام الصخرة أكثر مما ينبغي.\n\nما رأيك، في أي جوانب حياتك الآن تشعر أنك تدقق في الصخرة وتنتظر اللحظة المثالية للبدء؟",
+        "timestamp": "2026-08-19T21:43:54.092Z",
+        "suggestedQuestions": [
+          "📖 احكيلي قصة ملهمة تناسب شخصيتي",
+          "📊 حلل بياناتي ومحاوري النفسية بعمق",
+          "☕ كيف أتعامل مع ضغوط العمل والتفكير الزائد؟",
+          "🎭 اختبرني في معضلة قيادية واقعية"
+        ]
+      }
+    ]
+  },
   "goals": {
     "99843319": [
       {
@@ -287,8 +1926,98 @@
       }
     ]
   },
-  "challenges": {},
+  "challenges": {
+    "1787160151884": [
+      {
+        "id": "ch_1787162424970_979",
+        "userId": "1787160151884",
+        "startedAt": "2026-08-19T18:00:24.970Z",
+        "expiresAt": "2026-08-20T18:00:24.970Z",
+        "status": "active",
+        "dimensionKey": "communication_style",
+        "dimensionNameAr": "أسلوب التواصل والمصارحة",
+        "dimensionNameEn": "Communication & Constructive Candor",
+        "dimensionScore": 20,
+        "titleAr": "تحدي الـ 24 ساعة: تدوين موقف مزعج وتفكيك الفرضية الذهنية خلفه",
+        "titleEn": "24-Hour Growth: Reframe One Friction Event Through Cognitive Restructuring",
+        "descriptionAr": "اختر حدثاً أثار انزعاجك اليوم، واكتب على ورقة: ما الفكرة التلقائية التي خطرت ببالي؟ وما التفسير البديل الأكثر حكمة وإنصافاً؟",
+        "descriptionEn": "Identify one irritating friction point today and deliberately formulate two alternative, empowering interpretations of it.",
+        "actionStepsAr": [
+          "سجل الموقف المزعج بموضوعية بدون تضخيم.",
+          "حدد التفسير السلبي التلقائي.",
+          "اكتب تفسيراً بديلاً يعزز نموك الشخصي ويتفهم دوافع الطرف الآخر."
+        ],
+        "actionStepsEn": [
+          "Log the triggering event objectively without emotional hyperbole.",
+          "Identify the default negative cognitive distortion.",
+          "Formulate a constructive reframing hypothesis."
+        ],
+        "scientificRationaleAr": "إعادة التقييم الإدراكي (Cognitive Reappraisal) هي الآلية الأساسية في العلاج المعرفي السلوكي لبناء الصلابة النفسية.",
+        "scientificRationaleEn": "Cognitive reappraisal is the validated mechanism in CBT for long-term psychological resilience.",
+        "durationHours": 24,
+        "xpReward": 60,
+        "difficulty": "micro",
+        "category": "mindset"
+      }
+    ]
+  },
   "auditLogs": [
+    {
+      "id": "log_1787162549759_gn2f",
+      "timestamp": "2026-08-19T18:02:29.759Z",
+      "action": "ASSESSMENT_COMPLETED",
+      "userId": "1787160151884",
+      "details": "Completed assessment. Archetype: empathetic-catalyst (Score: 74)",
+      "status": "success"
+    },
+    {
+      "id": "log_1787162450742_q8cv",
+      "timestamp": "2026-08-19T18:00:50.742Z",
+      "action": "ASSESSMENT_COMPLETED",
+      "userId": "1787160151884",
+      "details": "Completed assessment. Archetype: empathetic-catalyst (Score: 85)",
+      "status": "success"
+    },
+    {
+      "id": "log_1787162227988_ida3",
+      "timestamp": "2026-08-19T17:57:07.988Z",
+      "action": "ASSESSMENT_COMPLETED",
+      "userId": "1787160151884",
+      "details": "Completed assessment. Archetype: empathetic-catalyst (Score: 64)",
+      "status": "success"
+    },
+    {
+      "id": "log_1787160145220_at5l",
+      "timestamp": "2026-08-19T17:22:25.220Z",
+      "action": "USER_REGISTER",
+      "userId": "1787160151884",
+      "details": "New user registered via email: wwww0999843319@gmail.com",
+      "status": "success"
+    },
+    {
+      "id": "log_1787158769065_4q0g",
+      "timestamp": "2026-08-19T16:59:29.065Z",
+      "action": "ASSESSMENT_COMPLETED",
+      "userId": "99843319",
+      "details": "Completed assessment. Archetype: empathetic-catalyst (Score: 60)",
+      "status": "success"
+    },
+    {
+      "id": "log_1787158722437_cm7u",
+      "timestamp": "2026-08-19T16:58:42.437Z",
+      "action": "USER_AUTH",
+      "userId": "99843319",
+      "details": "Authenticated via Telegram WebApp (amr_persona)",
+      "status": "success"
+    },
+    {
+      "id": "log_1787158722430_kqob",
+      "timestamp": "2026-08-19T16:58:42.430Z",
+      "action": "USER_AUTH",
+      "userId": "99843319",
+      "details": "Authenticated via Telegram WebApp (amr_persona)",
+      "status": "success"
+    },
     {
       "id": "log_1",
       "timestamp": "2026-08-19T00:48:13.144Z",
