@@ -875,10 +875,23 @@ async function startServer() {
       res.sendFile(path.join(distPath, 'index.html'));
     });
   }
-
-  app.listen(PORT, '0.0.0.0', () => {
+  app.get("/", (_req, res) => {
+    res.json({
+      status: "ok",
+      service: "PERSONA AI Engine",
+      time: new Date().toISOString(),
+    });
+  });
+  
+  app.get("/api/health", (_req, res) => {
+    res.json({
+      status: "healthy",
+    });
+  });
+  
+  app.listen(PORT, "0.0.0.0", () => {
     console.log(`[PERSONA AI Engine] Server listening on http://0.0.0.0:${PORT}`);
   });
-}
-
-startServer();
+  }
+  
+  startServer();
