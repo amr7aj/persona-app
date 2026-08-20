@@ -261,10 +261,8 @@ async function startServer() {
   });
 
   app.get("/api/auth/demo-accounts", async (req, res) => {
-    if (!(await requireAdmin(req, res))) return;
-
     const stats = await Db.getAdminStats();
-
+  
     const accounts = stats.users.map((u: any) => ({
       id: u.id,
       name: `${u.firstName} ${u.lastName || ""}`.trim(),
@@ -274,7 +272,7 @@ async function startServer() {
       level: u.level,
       photoUrl: u.photoUrl,
     }));
-
+  
     return sendSuccess(res, accounts);
   });
 
