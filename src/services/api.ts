@@ -12,8 +12,7 @@ import {
   GrowthChallenge,
 } from "../types";
 
-const API_BASE_URL = String((import.meta as any).env?.VITE_API_BASE_URL || "").replace(/\/$/, "");
-
+const API_BASE_URL = "https://persona-app-production-f193.up.railway.app";
 async function fetchJson<T>(url: string, options?: RequestInit): Promise<T> {
   const token =
     typeof window !== "undefined"
