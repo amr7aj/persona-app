@@ -1,10 +1,9 @@
 import { UserRole, QuestionCategory, Language, PersonalGoal, GrowthChallenge } from '../src/types';
 
 export interface ServerUser {
-  id: string; // telegram id or unique id as string
+  id: string;
   telegramId: number;
   email?: string;
-  passwordHash?: string;
   accountCode?: string;
   firstName: string;
   lastName?: string;
@@ -38,7 +37,7 @@ export interface UserAnswerSubmission {
   category: QuestionCategory;
   dimension: string;
   optionId: string;
-  value: number; // 1 to 5
+  value: number;
 }
 
 export interface AnalysisSubmissionPayload {
@@ -55,27 +54,8 @@ export interface StoredAnalysisResult {
   version: string;
   overallScore: number;
   archetypeId: string;
-  domainScores: {
-    cognitive: number;
-    emotional: number;
-    social: number;
-    behavioral: number;
-    motivation: number;
-    lifestyle: number;
-    relationships: number;
-    intimacy: number;
-    career: number;
-  };
-  dimensions: Array<{
-    name: string;
-    nameAr: string;
-    nameEn: string;
-    category: QuestionCategory;
-    score: number;
-    benchmark: number;
-    descriptionAr: string;
-    descriptionEn: string;
-  }>;
+  domainScores: Record<string, number>;
+  dimensions: Array<any>;
   aiReport?: Record<string, any>;
   isUnlockedPremium: boolean;
   completionTimeSeconds?: number;

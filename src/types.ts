@@ -1,6 +1,11 @@
-export type UserRole = 'user' | 'premium' | 'moderator' | 'admin' | 'super_admin';
+export type UserRole =
+  | "user"
+  | "premium"
+  | "moderator"
+  | "admin"
+  | "super_admin";
 
-export type Language = 'ar' | 'en';
+export type Language = "ar" | "en";
 
 export interface TelegramUser {
   id: number;
@@ -13,29 +18,35 @@ export interface TelegramUser {
 }
 
 export type AppView =
-  | 'splash'
-  | 'onboarding'
-  | 'dashboard'
-  | 'goals'
-  | 'quiz'
-  | 'results'
-  | 'dimensions'
-  | 'growth'
-  | 'reports_history'
-  | 'profile'
-  | 'referrals'
-  | 'bot_simulator'
-  | 'admin'
-  | 'auth';
+  | "splash"
+  | "onboarding"
+  | "dashboard"
+  | "goals"
+  | "quiz"
+  | "results"
+  | "dimensions"
+  | "growth"
+  | "reports_history"
+  | "profile"
+  | "referrals"
+  | "bot_simulator"
+  | "admin"
+  | "auth";
 
-export type GoalCategory = 'habits' | 'mindset' | 'vitality' | 'relationships' | 'career' | 'focus';
-export type GoalFrequency = 'daily' | 'weekly' | 'milestone';
+export type GoalCategory =
+  | "habits"
+  | "mindset"
+  | "vitality"
+  | "relationships"
+  | "career"
+  | "focus";
+export type GoalFrequency = "daily" | "weekly" | "milestone";
 
 export interface GoalCheckIn {
   id: string;
   timestamp: string;
   note?: string;
-  status: 'completed' | 'progressed' | 'struggled';
+  status: "completed" | "progressed" | "struggled";
   aiFeedback?: string;
 }
 
@@ -63,7 +74,7 @@ export interface PersonalGoal {
   aiCheckInPrompt?: AICheckInPrompt;
 }
 
-export type AssessmentMode = 'full' | 'express' | 'category';
+export type AssessmentMode = "full" | "express" | "category";
 
 export interface UserProfile {
   id: string; // telegram id or unique id
@@ -99,7 +110,7 @@ export interface UserProfile {
 
 export interface ChatMessage {
   id: string;
-  role: 'user' | 'model';
+  role: "user" | "model";
   text: string;
   timestamp: string;
   suggestedQuestions?: string[];
@@ -112,15 +123,15 @@ export interface ChatMessage {
 }
 
 export type QuestionCategory =
-  | 'cognitive'
-  | 'emotional'
-  | 'social'
-  | 'behavioral'
-  | 'motivation'
-  | 'lifestyle'
-  | 'relationships'
-  | 'intimacy'
-  | 'career';
+  | "cognitive"
+  | "emotional"
+  | "social"
+  | "behavioral"
+  | "motivation"
+  | "lifestyle"
+  | "relationships"
+  | "intimacy"
+  | "career";
 
 export interface QuestionOption {
   id: string;
@@ -252,7 +263,7 @@ export interface ReferralRecord {
   referredUserName: string;
   createdAt: string;
   rewardXp: number;
-  status: 'active' | 'pending';
+  status: "active" | "pending";
 }
 
 export interface BotNotification {
@@ -260,7 +271,12 @@ export interface BotNotification {
   userId: string;
   title: string;
   message: string;
-  type: 'analysis_ready' | 'retest_reminder' | 'recommendation' | 'badge_unlocked' | 'system';
+  type:
+    | "analysis_ready"
+    | "retest_reminder"
+    | "recommendation"
+    | "badge_unlocked"
+    | "system";
   read: boolean;
   createdAt: string;
   actionUrl?: string;
@@ -283,14 +299,14 @@ export interface GrowthChallenge {
   scientificRationaleEn: string;
   durationHours: number;
   xpReward: number;
-  status: 'active' | 'completed' | 'expired';
+  status: "active" | "completed" | "expired";
   startedAt: string;
   expiresAt: string;
   completedAt?: string;
   reflectionNote?: string;
   aiEvaluation?: string;
-  difficulty: 'micro' | 'standard' | 'courage';
-  category: 'psychological' | 'social' | 'mindset' | 'vitality' | 'focus';
+  difficulty: "micro" | "standard" | "courage";
+  category: "psychological" | "social" | "mindset" | "vitality" | "focus";
 }
 
 export interface AdminStats {
@@ -302,17 +318,47 @@ export interface AdminStats {
   revenueEst: number;
   aiRequestsCount: number;
   averageScore: number;
-  topArchetypes: { name: string; count: number }[];
-  recentLogs: { id: string; timestamp: string; action: string; user: string; status: string }[];
-}
 
+  topArchetypes: {
+    name: string;
+    count: number;
+  }[];
+
+  recentLogs: {
+    id: string;
+    timestamp: string;
+    action: string;
+    user: string;
+    status: string;
+  }[];
+
+  users: {
+    id: string;
+    telegramId: number;
+    email?: string;
+    firstName: string;
+    lastName?: string;
+    username?: string;
+    photoUrl?: string;
+    role: string;
+    createdAt: string;
+    lastLogin?: string;
+    xp: number;
+    level: number;
+    badges: string[];
+    referralCode: string;
+    referredBy?: string;
+    referralCount: number;
+    onboardingCompleted: boolean;
+  }[];
+}
 export interface UserSettings {
-  theme: 'cinematic_dark' | 'midnight_oled' | 'royal_purple' | 'emerald_focus';
-  fontSize: 'standard' | 'comfortable' | 'compact';
+  theme: "cinematic_dark" | "midnight_oled" | "royal_purple" | "emerald_focus";
+  fontSize: "standard" | "comfortable" | "compact";
   hapticFeedback: boolean;
   reducedMotion: boolean;
-  coachTone: 'deep_wise' | 'motivational' | 'calm_empathic' | 'analytical';
-  storyDepth: 'rich_stories' | 'balanced' | 'direct_tactical';
+  coachTone: "deep_wise" | "motivational" | "calm_empathic" | "analytical";
+  storyDepth: "rich_stories" | "balanced" | "direct_tactical";
   dailyGrowthReminder: boolean;
   reminderTime: string;
   goalsReminder: boolean;
@@ -322,4 +368,3 @@ export interface UserSettings {
   telegramSync: boolean;
   offlineCache: boolean;
 }
-

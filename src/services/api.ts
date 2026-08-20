@@ -12,13 +12,15 @@ import {
   GrowthChallenge,
 } from "../types";
 
+const API_BASE_URL = String((import.meta as any).env?.VITE_API_BASE_URL || "").replace(/\/$/, "");
+
 async function fetchJson<T>(url: string, options?: RequestInit): Promise<T> {
   const token =
     typeof window !== "undefined"
       ? localStorage.getItem("persona_token")
       : null;
 
-  const res = await fetch(url, {
+  let res = await fetch(`${API_BASE_URL}${url}`, {
     ...options,
     headers: {
       "Content-Type": "application/json",
@@ -26,6 +28,26 @@ async function fetchJson<T>(url: string, options?: RequestInit): Promise<T> {
       ...(options?.headers || {}),
     },
   });
+
+  if (res.status === 401 && typeof window !== "undefined" && url !== "/api/auth/refresh") {
+    const refreshToken = localStorage.getItem("persona_refresh_token");
+    if (refreshToken) {
+      try {
+        const refreshRes = await fetch(`${API_BASE_URL}/api/auth/refresh`, {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ refreshToken }),
+        });
+        const refreshJson = await refreshRes.json();
+        if (refreshRes.ok && refreshJson.success && refreshJson.data?.token) {
+          localStorage.setItem("persona_token", refreshJson.data.token);
+          if (refreshJson.data.refreshToken) localStorage.setItem("persona_refresh_token", refreshJson.data.refreshToken);
+          res = await fetch(`${API_BASE_URL}${url}`, {
+            ...options, headers: { "Content-Type": "application/json", Authorization: `Bearer ${refreshJson.data.token}`, ...(options?.headers || {}) },
+          });
+        }
+      } catch { /* fall through to the original 401 */ }
+    }
+  }
 
   const contentType = res.headers.get("content-type") || "";
   if (!contentType.includes("application/json")) {
@@ -51,17 +73,18 @@ async function fetchJson<T>(url: string, options?: RequestInit): Promise<T> {
 
 export const Api = {
   async authenticateTelegram(
-    user?: any
+    initData: string
   ): Promise<{ user: UserProfile; token: string }> {
     const res = await fetchJson<{ user: UserProfile; token: string }>(
       "/api/auth/telegram",
       {
         method: "POST",
-        body: JSON.stringify({ user }),
+        body: JSON.stringify({ initData }),
       }
     );
 
     localStorage.setItem("persona_token", res.token);
+    if ((res as any).refreshToken) localStorage.setItem("persona_refresh_token", (res as any).refreshToken);
     return res;
   },
 
@@ -82,6 +105,7 @@ export const Api = {
     );
 
     localStorage.setItem("persona_token", res.token);
+    if ((res as any).refreshToken) localStorage.setItem("persona_refresh_token", (res as any).refreshToken);
     return res;
   },
 
@@ -98,6 +122,7 @@ export const Api = {
     );
 
     localStorage.setItem("persona_token", res.token);
+    if ((res as any).refreshToken) localStorage.setItem("persona_refresh_token", (res as any).refreshToken);
     return res;
   },
 

@@ -1,809 +1,2189 @@
-import fs from 'fs';
-import path from 'path';
+import { randomUUID } from "crypto";
+import {
+  getSupabaseAdmin,
+  getSupabaseAuth,
+  getSupabaseAuthAdmin,
+} from "./supabase";
 import {
   ServerUser,
   StoredAnalysisResult,
   StoredNotification,
   StoredReferral,
   StoredChatMessage,
-  AuditLog
-} from './types';
-import { GrowthMetric, UserRole, PersonalGoal, GoalCheckIn, GrowthChallenge } from '../src/types';
-import { ARCHETYPES } from '../src/data/archetypesData';
+  AuditLog,
+} from "./types";
 
-interface DatabaseSchema {
-  users: Record<string, ServerUser>;
-  analysisResults: Record<string, StoredAnalysisResult>;
-  notifications: Record<string, StoredNotification>;
-  referrals: StoredReferral[];
-  growthHistory: Record<string, GrowthMetric[]>;
-  chatHistory: Record<string, StoredChatMessage[]>;
-  goals: Record<string, PersonalGoal[]>;
-  challenges: Record<string, GrowthChallenge[]>;
-  auditLogs: AuditLog[];
-  settings: {
-    maintenanceMode: boolean;
-    freeAssessmentQuestionsCount: number;
-    premiumPriceUsd: number;
-    aiModel: string;
-  };
-}
+import {
+  GrowthMetric,
+  PersonalGoal,
+  GoalCheckIn,
+  GrowthChallenge,
+} from "../src/types";
 
-const DATA_DIR = path.join(process.cwd(), 'data');
-const DB_FILE = path.join(DATA_DIR, 'persona_db.json');
+const s = () => getSupabaseAdmin();
 
-// In-memory working database
-let db: DatabaseSchema = {
-  users: {},
-  analysisResults: {},
-  notifications: {},
-  referrals: [],
-  growthHistory: {},
-  chatHistory: {},
-  goals: {},
-  challenges: {},
-  auditLogs: [],
-  settings: {
-    maintenanceMode: false,
-    freeAssessmentQuestionsCount: 15,
-    premiumPriceUsd: 14.99,
-    aiModel: 'gemini-3.7-flash',
-  }
-};
+const now = () => new Date().toISOString();
 
-// Seed default demo user & test result
-function initDb() {
-  try {
-    if (!fs.existsSync(DATA_DIR)) {
-      fs.mkdirSync(DATA_DIR, { recursive: true });
-    }
+const clean = (value: unknown): string =>
+  typeof value === "string" ? value.trim() : "";
 
-    if (fs.existsSync(DB_FILE)) {
-      const raw = fs.readFileSync(DB_FILE, 'utf-8');
-      const loaded = JSON.parse(raw);
-      db = {
-        users: loaded.users || {},
-        analysisResults: loaded.analysisResults || {},
-        notifications: loaded.notifications || {},
-        referrals: Array.isArray(loaded.referrals) ? loaded.referrals : [],
-        growthHistory: loaded.growthHistory || {},
-        chatHistory: loaded.chatHistory || {},
-        goals: loaded.goals || {},
-        challenges: loaded.challenges || {},
-        auditLogs: Array.isArray(loaded.auditLogs) ? loaded.auditLogs : [],
-        settings: loaded.settings || {
-          maintenanceMode: false,
-          freeAssessmentQuestionsCount: 15,
-          premiumPriceUsd: 14.99,
-          aiModel: 'gemini-2.5-flash',
-        }
-      };
-
-      if (!db.users['99843319']) {
-        seedDefaultData();
-        saveDb();
-      }
-    } else {
-      seedDefaultData();
-      saveDb();
-    }
-  } catch (err) {
-    console.error('[DB] Error loading persona database, using clean state:', err);
-    seedDefaultData();
-  }
-}
-
-function saveDb() {
-  try {
-    if (!fs.existsSync(DATA_DIR)) {
-      fs.mkdirSync(DATA_DIR, { recursive: true });
-    }
-    fs.writeFileSync(DB_FILE, JSON.stringify(db, null, 2), 'utf-8');
-  } catch (err) {
-    console.error('[DB] Error persisting database to disk:', err);
-  }
-}
-
-function seedDefaultData() {
-  const defaultUserId = '99843319';
-  const defaultUser: ServerUser = {
-    id: defaultUserId,
-    telegramId: 99843319,
-    firstName: 'Amr',
-    lastName: 'K.',
-    username: 'amr_persona',
-    photoUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
-    language: 'ar',
-    role: 'admin', // Demo account with admin privileges
-    createdAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
-    lastLogin: new Date().toISOString(),
-    xp: 450,
-    level: 3,
-    badges: ['self_aware', 'goal_hunter', 'completed_profile', 'deep_thinker'],
-    referralCode: 'PERSONA-7X92',
-    referralCount: 4,
-    onboardingCompleted: true,
-    onboardingData: {
-      age: '28-35',
-      gender: 'male',
-      status: 'single',
-      field: 'Tech & Strategy',
-      lifestyle: 'active_moderate',
-      goals: ['self_mastery', 'career_growth', 'emotional_balance'],
-      sleepHours: '7-8',
-      stressLevel: 'moderate'
-    }
-  };
-
-  db.users[defaultUserId] = defaultUser;
-
-  // Seed default lifestyle goals with AI check-in prompts tailored to the Strategic Builder archetype
-  db.goals[defaultUserId] = [
-    {
-      id: 'goal_01',
-      userId: defaultUserId,
-      title: 'جلسة تركيز وتخطيط استراتيجي عميق 45 دقيقة يومياً',
-      category: 'focus',
-      targetFrequency: 'daily',
-      targetDaysPerWeek: 6,
-      progress: 85,
-      streak: 5,
-      createdAt: new Date(Date.now() - 12 * 86400000).toISOString(),
-      lastCheckIn: new Date(Date.now() - 2 * 3600000).toISOString(),
-      checkIns: [
-        {
-          id: 'chk_1',
-          timestamp: new Date(Date.now() - 86400000).toISOString(),
-          status: 'completed',
-          note: 'أنجزت تخطيط خارطة الطريق الفصلية بدون تشتت.',
-          aiFeedback: 'ممتاز يا عمرو! استمرارك يغذي محور الانضباط (94%) لديك، لكن تذكر إغلاق الشاشات بعدها لحماية طاقتك الذهنية.'
-        }
-      ],
-      aiCheckInPrompt: {
-        questionAr: 'كيف كانت جودة تركيزك اليوم مقارنة بضغط المهام المتراكمة؟',
-        questionEn: 'How was the depth of your focus today amidst task pressure?',
-        reasoningAr: 'بما أن نمطك يميل إلى التفكير التحليلي العالي، فإن أكبر تحدٍ هو التحول إلى الإفراط في التفكير بدلاً من التنفيذ المباشر.',
-        reasoningEn: 'Given your high analytical score, the primary barrier is analysis paralysis.',
-        archetypeTipAr: 'قسّم جلسة الـ 45 دقيقة إلى 3 فترات من 15 دقيقة مع هدف واحد غير قابل للتأجيل.',
-        archetypeTipEn: 'Break your 45m block into 3 x 15m intervals with a single non-negotiable objective.'
-      }
-    },
-    {
-      id: 'goal_02',
-      userId: defaultUserId,
-      title: 'تهدئة التفكير والتأمل قبل النوم وتنظيم هرمون التوتر',
-      category: 'mindset',
-      targetFrequency: 'daily',
-      targetDaysPerWeek: 5,
-      progress: 60,
-      streak: 3,
-      createdAt: new Date(Date.now() - 7 * 86400000).toISOString(),
-      lastCheckIn: new Date(Date.now() - 24 * 3600000).toISOString(),
-      checkIns: [
-        {
-          id: 'chk_2',
-          timestamp: new Date(Date.now() - 24 * 3600000).toISOString(),
-          status: 'progressed',
-          note: 'تنفس بطني 10 دقائق وشعرت ببطء نبضات القلب.',
-          aiFeedback: 'خطوة ممتازة لخفض التوتر العصبي وتصفية الذهن قبل النوم.'
-        }
-      ],
-      aiCheckInPrompt: {
-        questionAr: 'هل نجحت في فصل عقلك عن تحديات الغد قبل الاستلقاء؟',
-        questionEn: 'Were you able to detach your mind from tomorrow\'s challenges before sleeping?',
-        reasoningAr: 'الأنماط الاستراتيجية تميل لحمل خطط الغد إلى السرير، مما يقلل من جودة النوم العميق.',
-        reasoningEn: 'Strategic builders often carry tomorrow\'s blueprints to bed, impeding REM sleep.',
-        archetypeTipAr: 'اكتب 3 نقاط أساسية على ورقة خارجية قبل 30 دقيقة من النوم لإنهاء معالجة الدماغ.',
-        archetypeTipEn: 'Write down top 3 points on physical paper 30m prior to sleep to signal completion.'
-      }
-    },
-    {
-      id: 'goal_03',
-      userId: defaultUserId,
-      title: 'تواصل عاطفي وإنساني أسبوعي عميق مع دائرة الثقة',
-      category: 'relationships',
-      targetFrequency: 'weekly',
-      targetDaysPerWeek: 2,
-      progress: 70,
-      streak: 2,
-      createdAt: new Date(Date.now() - 14 * 86400000).toISOString(),
-      lastCheckIn: new Date(Date.now() - 48 * 3600000).toISOString(),
-      checkIns: [],
-      aiCheckInPrompt: {
-        questionAr: 'متى كانت آخر محادثة تحدثت فيها بعفوية ودون تحليل منطقي للحلول؟',
-        questionEn: 'When was your last spontaneous conversation without logically analyzing solutions?',
-        reasoningAr: 'توازنك العاطفي يزدهر عندما تشارك مشاعرك الحقيقية وتصغي باهتمام دون وضع خطط إصلاح فورية.',
-        reasoningEn: 'Your emotional health flourishes when listening without attempting to engineer immediate fixes.',
-        archetypeTipAr: 'اسأل الطرف الآخر: "هل ترغب في الاستماع والمشاركة فقط أم تريد أن نفكر في حلول؟"',
-        archetypeTipEn: 'Ask: "Do you want me to just listen and be present, or help brainstorm solutions?"'
-      }
-    }
-  ];
-
-  // Historic 2026 assessment
-  const report2026: StoredAnalysisResult = {
-    id: 'rep_2026_01',
-    userId: defaultUserId,
-    createdAt: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString(),
-    version: '2026.1',
-    overallScore: 84,
-    archetypeId: 'strategic-builder',
-    domainScores: {
-      cognitive: 88,
-      emotional: 82,
-      social: 79,
-      behavioral: 91,
-      motivation: 87,
-      lifestyle: 80,
-      relationships: 83,
-      intimacy: 85,
-      career: 89,
-    },
-    dimensions: [
-      { name: 'analytical_thinking', nameAr: 'التفكير التحليلي', nameEn: 'Analytical Thinking', category: 'cognitive', score: 92, benchmark: 65, descriptionAr: 'قدرة استثنائية على تفكيك المشكلات المعقدة.', descriptionEn: 'High ability to deconstruct complex challenges.' },
-      { name: 'emotional_awareness', nameAr: 'الوعي العاطفي', nameEn: 'Emotional Awareness', category: 'emotional', score: 85, benchmark: 65, descriptionAr: 'إدراك متزن للمشاعر والدوافع.', descriptionEn: 'Grounded awareness of emotions and triggers.' },
-      { name: 'discipline', nameAr: 'الانضباط والالتزام', nameEn: 'Discipline', category: 'behavioral', score: 94, benchmark: 65, descriptionAr: 'استمرارية عالية في تنفيذ الأهداف طويلة الأجل.', descriptionEn: 'High persistence in executing long-range goals.' },
-      { name: 'social_confidence', nameAr: 'الثقة الاجتماعية', nameEn: 'Social Confidence', category: 'social', score: 78, benchmark: 65, descriptionAr: 'حضور هادئ ومؤثر في المجموعات.', descriptionEn: 'Calm and effective group presence.' },
-      { name: 'ambition', nameAr: 'الطموح والإنجاز', nameEn: 'Ambition', category: 'motivation', score: 90, benchmark: 65, descriptionAr: 'رغبة مستمرة في التطور والريادة.', descriptionEn: 'Continuous drive for mastery and leadership.' }
-    ],
-    isUnlockedPremium: true,
-    completionTimeSeconds: 240
-  };
-
-  db.analysisResults[report2026.id] = report2026;
-
-  // Growth metrics tracking
-  db.growthHistory[defaultUserId] = [
-    { date: '2026-01-15', discipline: 75, emotionalAwareness: 70, confidence: 68, communication: 72, stressManagement: 65, overallScore: 70 },
-    { date: '2026-04-10', discipline: 82, emotionalAwareness: 76, confidence: 74, communication: 78, stressManagement: 73, overallScore: 77 },
-    { date: '2026-08-01', discipline: 91, emotionalAwareness: 85, confidence: 82, communication: 84, stressManagement: 80, overallScore: 84 }
-  ];
-
-  // Seed initial notifications
-  const notif1: StoredNotification = {
-    id: 'notif_01',
-    userId: defaultUserId,
-    title: 'تحليل شخصيتك جاهز 🧠',
-    message: 'اكتمل بناء تقرير الذكاء الشخصي الشامل لنمط "البنّاء الاستراتيجي".',
-    type: 'analysis_ready',
-    read: false,
-    createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-    actionUrl: '/reports/rep_2026_01'
-  };
-  const notif2: StoredNotification = {
-    id: 'notif_02',
-    userId: defaultUserId,
-    title: 'وسام جديد مفتوح 🏆',
-    message: 'حصلت على وسام "الوعي الذاتي العميق" لإتمام كافة محاور التحليل.',
-    type: 'badge_unlocked',
-    read: true,
-    createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-  };
-  db.notifications[notif1.id] = notif1;
-  db.notifications[notif2.id] = notif2;
-
-  // Seed referrals
-  db.referrals.push(
-    { id: 'ref_1', referrerId: defaultUserId, referredUserId: '1002', referredUserName: 'سارة م.', createdAt: new Date(Date.now() - 15 * 86400000).toISOString(), rewardXp: 100, status: 'active' },
-    { id: 'ref_2', referrerId: defaultUserId, referredUserId: '1003', referredUserName: 'طارق ح.', createdAt: new Date(Date.now() - 8 * 86400000).toISOString(), rewardXp: 100, status: 'active' },
-    { id: 'ref_3', referrerId: defaultUserId, referredUserId: '1004', referredUserName: 'ليلى ع.', createdAt: new Date(Date.now() - 3 * 86400000).toISOString(), rewardXp: 100, status: 'active' },
-    { id: 'ref_4', referrerId: defaultUserId, referredUserId: '1005', referredUserName: 'كريم ن.', createdAt: new Date(Date.now() - 1 * 86400000).toISOString(), rewardXp: 100, status: 'active' }
-  );
-
-  // Seed audit logs
-  db.auditLogs.push(
-    { id: 'log_1', timestamp: new Date().toISOString(), action: 'SYSTEM_BOOT', userId: 'system', details: 'PERSONA AI Server initialized with 12 Archetypes', status: 'success' },
-    { id: 'log_2', timestamp: new Date(Date.now() - 5000).toISOString(), action: 'USER_LOGIN', userId: defaultUserId, details: 'Telegram WebApp initData validated', status: 'success' }
+function isUuid(value: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+    value
   );
 }
 
-// Public DB Methods
+/**
+ * custom_settings is the only JSON storage available on users.
+ *
+ * We keep application-only data here:
+ * {
+ *   onboardingData: {...},
+ *   userSettings: {...}
+ * }
+ */
+function getCustomSettings(row: any): Record<string, any> {
+  if (!row?.custom_settings) return {};
+
+  if (
+    typeof row.custom_settings === "object" &&
+    !Array.isArray(row.custom_settings)
+  ) {
+    return row.custom_settings;
+  }
+
+  return {};
+}
+
+function getOnboardingData(row: any): Record<string, any> | undefined {
+  const settings = getCustomSettings(row);
+  return settings.onboardingData || undefined;
+}
+
+function getUserSettings(row: any): Record<string, any> | undefined {
+  const settings = getCustomSettings(row);
+  return settings.userSettings || undefined;
+}
+
+/**
+ * Maps the real Supabase users table to ServerUser.
+ *
+ * IMPORTANT:
+ * users.last_login does not exist in your schema.
+ * We therefore use updated_at as the server-side last activity/login timestamp.
+ *
+ * accountCode and referralCount are not real DB columns.
+ * accountCode is mapped from referral_code.
+ * referralCount is calculated from referrals.
+ */
+function mapUser(row: any, referralCount = 0): ServerUser {
+  const customSettings = getCustomSettings(row);
+
+  return {
+    id: row.id,
+
+    telegramId: Number(row.telegram_id || 0),
+
+    email: row.email || undefined,
+
+    accountCode: row.referral_code || undefined,
+
+    firstName: row.first_name || "User",
+
+    lastName: row.last_name || undefined,
+
+    username: row.username || undefined,
+
+    photoUrl: row.avatar_url || undefined,
+
+    language: row.language === "en" ? "en" : "ar",
+
+    role: row.role || "user",
+
+    createdAt: row.created_at,
+
+    lastLogin: row.updated_at || row.created_at,
+
+    xp: Number(row.xp || 0),
+
+    level: Number(row.level || 1),
+
+    badges: Array.isArray(row.badges) ? row.badges : [],
+
+    referralCode: row.referral_code || "",
+
+    referredBy: row.referred_by || undefined,
+
+    referralCount,
+
+    onboardingCompleted: Boolean(row.onboarding_completed),
+
+    onboardingData: customSettings.onboardingData || undefined,
+  };
+}
+
+async function getReferralCount(userId: string): Promise<number> {
+  const { count, error } = await s()
+    .from("referrals")
+    .select("id", { count: "exact", head: true })
+    .eq("referrer_id", userId);
+
+  if (error) return 0;
+
+  return count || 0;
+}
+
+async function getUserRow(userId: string): Promise<any | null> {
+  const { data, error } = await s()
+    .from("users")
+    .select("*")
+    .eq("id", userId)
+    .maybeSingle();
+
+  if (error || !data) return null;
+
+  return data;
+}
+
 export const Db = {
-  init: initDb,
+  /**
+   * Initialize DB connection.
+   *
+   * Supabase is the ONLY persistent database.
+   * No JSON database is created.
+   */
+  async init() {
+    const { error } = await s().from("users").select("id").limit(1);
 
-  getUser(userId: string): ServerUser | undefined {
-    if (!userId) return undefined;
-    db.users = db.users || {};
-    return db.users[userId];
+    if (error) {
+      console.error("[DB INIT]", error.message);
+    }
   },
 
-  getOrCreateUser(telegramUser: {
+  /**
+   * Get user by Supabase Auth UUID.
+   */
+  async getUser(userId: string): Promise<ServerUser | undefined> {
+    if (!userId) return undefined;
+
+    const row = await getUserRow(userId);
+
+    if (!row) return undefined;
+
+    const referralCount = await getReferralCount(userId);
+
+    return mapUser(row, referralCount);
+  },
+
+  /**
+   * Telegram authentication.
+   *
+   * Telegram users are represented by a real Supabase Auth user.
+   */
+  async getOrCreateUser(telegramUser: {
     id: number;
     first_name: string;
     last_name?: string;
     username?: string;
     photo_url?: string;
     language_code?: string;
-  }): ServerUser {
-    db.users = db.users || {};
-    const userId = String(telegramUser.id);
-    if (!db.users[userId]) {
-      const code = 'PERSONA-' + Math.random().toString(36).substring(2, 6).toUpperCase() + Math.floor(10 + Math.random() * 90);
-      db.users[userId] = {
-        id: userId,
-        telegramId: telegramUser.id,
-        firstName: telegramUser.first_name || 'User',
-        lastName: telegramUser.last_name,
-        username: telegramUser.username,
-        photoUrl: telegramUser.photo_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
-        language: (telegramUser.language_code?.startsWith('en') ? 'en' : 'ar'),
-        role: 'user',
-        createdAt: new Date().toISOString(),
-        lastLogin: new Date().toISOString(),
-        xp: 50,
-        level: 1,
-        badges: ['explorer'],
-        referralCode: code,
-        referralCount: 0,
-        onboardingCompleted: false
-      };
-      saveDb();
+  }): Promise<{
+    user: ServerUser;
+    accessToken: string;
+    refreshToken?: string;
+  }> {
+    let userId: string;
+
+    const existing = await s()
+      .from("users")
+      .select("*")
+      .eq("telegram_id", telegramUser.id)
+      .maybeSingle();
+
+    if (existing.data) {
+      userId = existing.data.id;
+
+      const existingSettings = getCustomSettings(existing.data);
+
+      const { data, error } = await s()
+        .from("users")
+        .update({
+          first_name:
+            telegramUser.first_name || existing.data.first_name || "User",
+
+          last_name: telegramUser.last_name ?? existing.data.last_name ?? null,
+
+          username: telegramUser.username ?? existing.data.username ?? null,
+
+          avatar_url:
+            telegramUser.photo_url ?? existing.data.avatar_url ?? null,
+
+          language: telegramUser.language_code?.startsWith("en")
+            ? "en"
+            : existing.data.language || "ar",
+
+          updated_at: now(),
+
+          custom_settings: existingSettings,
+        })
+        .eq("id", userId)
+        .select("*")
+        .single();
+
+      if (error || !data) {
+        throw error || new Error("Failed to update Telegram user");
+      }
     } else {
-      db.users[userId].lastLogin = new Date().toISOString();
-      if (telegramUser.first_name) db.users[userId].firstName = telegramUser.first_name;
-      if (telegramUser.last_name) db.users[userId].lastName = telegramUser.last_name;
-      if (telegramUser.username) db.users[userId].username = telegramUser.username;
-      saveDb();
+      const syntheticEmail = `telegram_${telegramUser.id}@telegram.persona.local`;
+
+      const temporaryPassword = `${randomUUID()}A1!`;
+
+      const { data: authData, error: authError } =
+        await s().auth.admin.createUser({
+          email: syntheticEmail,
+          password: temporaryPassword,
+          email_confirm: true,
+
+          user_metadata: {
+            telegram_id: telegramUser.id,
+            first_name: telegramUser.first_name,
+            last_name: telegramUser.last_name,
+            username: telegramUser.username,
+          },
+        });
+
+      if (authError || !authData.user) {
+        throw authError || new Error("Failed to create Telegram Auth user");
+      }
+
+      userId = authData.user.id;
+
+      const referralCode = `PERSONA-${Math.random()
+        .toString(36)
+        .slice(2, 6)
+        .toUpperCase()}${Math.floor(10 + Math.random() * 90)}`;
+
+      const { error } = await s()
+        .from("users")
+        .insert({
+          id: userId,
+
+          telegram_id: telegramUser.id,
+
+          first_name: telegramUser.first_name || "User",
+
+          last_name: telegramUser.last_name || null,
+
+          username: telegramUser.username || null,
+
+          email: syntheticEmail,
+
+          avatar_url: telegramUser.photo_url || null,
+
+          language: telegramUser.language_code?.startsWith("en") ? "en" : "ar",
+
+          role: "user",
+
+          level: 1,
+
+          xp: 50,
+
+          current_streak: 1,
+
+          last_active_date: new Date().toISOString().slice(0, 10),
+
+          onboarding_completed: false,
+
+          referral_code: referralCode,
+
+          referred_by: null,
+
+          custom_settings: {},
+
+          badges: ["explorer"],
+
+          updated_at: now(),
+        });
+
+      if (error) {
+        await s().auth.admin.deleteUser(userId);
+        throw error;
+      }
     }
-    return db.users[userId];
+
+    /**
+     * Generate a temporary password so we can obtain
+     * a REAL Supabase JWT session.
+     */
+    const temporaryPassword = `${randomUUID()}A1!`;
+
+    const { error: passwordError } = await s().auth.admin.updateUserById(
+      userId,
+      {
+        password: temporaryPassword,
+      }
+    );
+
+    if (passwordError) {
+      throw passwordError;
+    }
+
+    const { data: emailRow } = await s()
+      .from("users")
+      .select("email")
+      .eq("id", userId)
+      .single();
+
+    const email = emailRow?.email;
+
+    if (!email) {
+      throw new Error("Telegram account email is missing");
+    }
+
+    const { data: sessionData, error: sessionError } =
+      await getSupabaseAuth().auth.signInWithPassword({
+        email,
+        password: temporaryPassword,
+      });
+
+    if (sessionError || !sessionData.session) {
+      throw (
+        sessionError || new Error("Failed to create Telegram Supabase session")
+      );
+    }
+
+    await s()
+      .from("users")
+      .update({
+        updated_at: now(),
+        last_active_date: new Date().toISOString().slice(0, 10),
+      })
+      .eq("id", userId);
+
+    const user = await this.getUser(userId);
+
+    if (!user) {
+      throw new Error("Failed to load Telegram user");
+    }
+
+    await this.logAudit(
+      "USER_AUTH",
+      user.id,
+      "Authenticated via verified Telegram WebApp"
+    );
+
+    return {
+      user,
+      accessToken: sessionData.session.access_token,
+
+      refreshToken: sessionData.session.refresh_token,
+    };
   },
 
-  updateUser(userId: string, updates: Partial<ServerUser>): ServerUser | null {
+  /**
+   * Update user.
+   *
+   * Only real users columns are written.
+   */
+  async updateUser(
+    userId: string,
+    updates: Partial<ServerUser>
+  ): Promise<ServerUser | null> {
     if (!userId) return null;
-    db.users = db.users || {};
-    if (!db.users[userId]) return null;
-    db.users[userId] = { ...db.users[userId], ...updates };
-    saveDb();
-    return db.users[userId];
+
+    const existing = await getUserRow(userId);
+
+    if (!existing) return null;
+
+    const patch: Record<string, any> = {};
+
+    if (updates.firstName !== undefined) {
+      patch.first_name = updates.firstName;
+    }
+
+    if (updates.lastName !== undefined) {
+      patch.last_name = updates.lastName || null;
+    }
+
+    if (updates.username !== undefined) {
+      patch.username = updates.username || null;
+    }
+
+    if (updates.photoUrl !== undefined) {
+      patch.avatar_url = updates.photoUrl || null;
+    }
+
+    if (updates.language !== undefined) {
+      patch.language = updates.language;
+    }
+
+    if (updates.role !== undefined) {
+      patch.role = updates.role;
+    }
+
+    if (updates.xp !== undefined) {
+      patch.xp = updates.xp;
+    }
+
+    if (updates.level !== undefined) {
+      patch.level = updates.level;
+    }
+
+    if (updates.badges !== undefined) {
+      patch.badges = updates.badges;
+    }
+
+    if (updates.referralCode !== undefined) {
+      patch.referral_code = updates.referralCode;
+    }
+
+    if (updates.referredBy !== undefined) {
+      patch.referred_by = updates.referredBy || null;
+    }
+
+    if (updates.onboardingCompleted !== undefined) {
+      patch.onboarding_completed = updates.onboardingCompleted;
+    }
+
+    /**
+     * ServerUser.lastLogin maps to updated_at
+     */
+    if (updates.lastLogin !== undefined) {
+      patch.updated_at = updates.lastLogin;
+    }
+
+    /**
+     * onboardingData is stored inside custom_settings.
+     */
+    if (updates.onboardingData !== undefined) {
+      const currentSettings = getCustomSettings(existing);
+
+      patch.custom_settings = {
+        ...currentSettings,
+
+        onboardingData: updates.onboardingData,
+      };
+    }
+
+    patch.updated_at = patch.updated_at || now();
+
+    const { data, error } = await s()
+      .from("users")
+      .update(patch)
+      .eq("id", userId)
+      .select("*")
+      .maybeSingle();
+
+    if (error || !data) {
+      return null;
+    }
+
+    return this.getUser(userId);
   },
 
-  addXp(userId: string, amount: number, badgeAward?: string): ServerUser | null {
-    if (!userId) return null;
-    db.users = db.users || {};
-    const user = db.users[userId];
+  /**
+   * XP system.
+   *
+   * Updates users.xp + users.level
+   * and records every XP operation in xp_logs.
+   */
+  async addXp(
+    userId: string,
+    amount: number,
+    badgeAward?: string
+  ): Promise<ServerUser | null> {
+    const user = await this.getUser(userId);
+
     if (!user) return null;
-    user.xp = (user.xp || 0) + amount;
-    user.level = Math.floor(user.xp / 150) + 1;
-    user.badges = user.badges || [];
+
+    const badges = [...(user.badges || [])];
+
+    if (badgeAward && !badges.includes(badgeAward)) {
+      badges.push(badgeAward);
+    }
+
+    const oldXp = user.xp || 0;
+
+    const newXp = oldXp + amount;
+
+    const newLevel = Math.floor(newXp / 150) + 1;
+
+    const { error } = await s()
+      .from("users")
+      .update({
+        xp: newXp,
+        level: newLevel,
+        badges,
+        updated_at: now(),
+      })
+      .eq("id", userId);
+
+    if (error) {
+      throw error;
+    }
+
+    await s()
+      .from("xp_logs")
+      .insert({
+        user_id: userId,
+
+        level: "info",
+
+        action: amount >= 0 ? "XP_EARNED" : "XP_DEDUCTED",
+
+        meta: {
+          amount,
+          oldXp,
+          newXp,
+          oldLevel: user.level,
+          newLevel,
+          badgeAward: badgeAward || null,
+        },
+      });
+
     if (badgeAward && !user.badges.includes(badgeAward)) {
-      user.badges.push(badgeAward);
-      this.addNotification(userId, {
-        title: 'وسام جديد مفتوح 🎖️',
+      await this.addNotification(userId, {
+        title: "وسام جديد مفتوح 🎖️",
+
         message: `تهانينا! لقد حصلت على وسام جديد: ${badgeAward}`,
-        type: 'badge_unlocked'
+
+        type: "badge_unlocked",
       });
     }
-    saveDb();
-    return user;
+
+    return this.getUser(userId);
   },
 
-  saveAnalysisResult(result: StoredAnalysisResult): StoredAnalysisResult {
-    db.analysisResults = db.analysisResults || {};
-    db.growthHistory = db.growthHistory || {};
-    db.analysisResults[result.id] = result;
+  /**
+   * Save personality analysis.
+   *
+   * REAL TABLE:
+   * analysis_reports
+   */
+  async saveAnalysisResult(
+    result: StoredAnalysisResult
+  ): Promise<StoredAnalysisResult> {
+    const id = isUuid(result.id) ? result.id : randomUUID();
 
-    // Track user growth timeline
-    if (!db.growthHistory[result.userId]) {
-      db.growthHistory[result.userId] = [];
-    }
-    db.growthHistory[result.userId].push({
-      date: new Date().toISOString().split('T')[0],
-      discipline: result.domainScores.behavioral,
-      emotionalAwareness: result.domainScores.emotional,
-      confidence: result.domainScores.social,
-      communication: result.domainScores.social,
-      stressManagement: result.domainScores.lifestyle,
-      overallScore: result.overallScore
-    });
-
-    // Reward XP
-    this.addXp(result.userId, 150, 'completed_profile');
-
-    // Add notification
-    this.addNotification(result.userId, {
-      title: 'تحليل شخصيتك الجديد مكتمل 🧠',
-      message: `تم تحليل إجاباتك بنجاح. نمطك هو: ${ARCHETYPES[result.archetypeId]?.nameAr || result.archetypeId}`,
-      type: 'analysis_ready',
-      actionUrl: `/reports/${result.id}`
-    });
-
-    saveDb();
-    return result;
-  },
-
-  getAnalysisResult(reportId: string): StoredAnalysisResult | undefined {
-    db.analysisResults = db.analysisResults || {};
-    return db.analysisResults[reportId];
-  },
-
-  getUserAnalysisHistory(userId: string): StoredAnalysisResult[] {
-    if (!userId) return [];
-    db.analysisResults = db.analysisResults || {};
-    return Object.values(db.analysisResults)
-      .filter((r) => r && r.userId === userId)
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-  },
-
-  getGrowthHistory(userId: string): GrowthMetric[] {
-    if (!userId) return [];
-    db.growthHistory = db.growthHistory || {};
-    return db.growthHistory[userId] || [];
-  },
-
-  addNotification(userId: string, notif: Omit<StoredNotification, 'id' | 'userId' | 'createdAt' | 'read'>): StoredNotification {
-    db.notifications = db.notifications || {};
-    const id = 'notif_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
-    const newNotif: StoredNotification = {
+    const row = {
       id,
-      userId,
-      title: notif.title,
-      message: notif.message,
-      type: notif.type,
-      read: false,
-      createdAt: new Date().toISOString(),
-      actionUrl: notif.actionUrl
+
+      user_id: result.userId,
+
+      archetype_id: result.archetypeId,
+
+      overall_score: result.overallScore,
+
+      domain_scores: result.domainScores || {},
+
+      /**
+       * Frontend calls this "dimensions".
+       * DB calls it "scores".
+       */
+      scores: result.dimensions || [],
+
+      ai_report: result.aiReport || null,
+
+      /**
+       * Not represented in StoredAnalysisResult.
+       * Keep null.
+       */
+      archetype_data: null,
+
+      answers_snapshot: null,
+
+      completion_time_seconds: result.completionTimeSeconds || 0,
+
+      version: result.version || "2026.1",
+
+      created_at: result.createdAt || now(),
     };
-    db.notifications[id] = newNotif;
-    saveDb();
-    return newNotif;
-  },
 
-  getUserNotifications(userId: string): StoredNotification[] {
-    if (!userId) return [];
-    db.notifications = db.notifications || {};
-    return Object.values(db.notifications)
-      .filter((n) => n && n.userId === userId)
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-  },
+    const { error } = await s().from("analysis_reports").upsert(row);
 
-  markNotificationRead(notifId: string): boolean {
-    db.notifications = db.notifications || {};
-    if (db.notifications[notifId]) {
-      db.notifications[notifId].read = true;
-      saveDb();
-      return true;
+    if (error) {
+      throw error;
     }
-    return false;
+
+    /**
+     * XP reward for completing analysis.
+     */
+    await this.addXp(result.userId, 150, "completed_profile");
+
+    await this.addNotification(result.userId, {
+      title: "تحليل شخصيتك الجديد مكتمل 🧠",
+
+      message: `تم تحليل إجاباتك بنجاح. نمطك هو: ${result.archetypeId}`,
+
+      type: "analysis_ready",
+
+      actionUrl: `/reports/${id}`,
+    });
+
+    return {
+      ...result,
+      id,
+    };
   },
 
-  applyReferral(referrerCode: string, newUserId: string, newUserName: string): boolean {
-    db.users = db.users || {};
-    db.referrals = db.referrals || [];
-    const referrer = Object.values(db.users).find((u) => u && u.referralCode === referrerCode);
-    if (!referrer || referrer.id === newUserId) return false;
+  /**
+   * Get one analysis report.
+   */
+  async getAnalysisResult(
+    reportId: string
+  ): Promise<StoredAnalysisResult | undefined> {
+    const { data, error } = await s()
+      .from("analysis_reports")
+      .select("*")
+      .eq("id", reportId)
+      .maybeSingle();
 
-    referrer.referralCount = (referrer.referralCount || 0) + 1;
-    referrer.xp = (referrer.xp || 0) + 100;
-    this.addXp(referrer.id, 100, 'influencer');
+    if (error || !data) {
+      return undefined;
+    }
 
-    db.referrals.push({
-      id: 'ref_' + Date.now(),
-      referrerId: referrer.id,
-      referredUserId: newUserId,
-      referredUserName: newUserName,
-      createdAt: new Date().toISOString(),
-      rewardXp: 100,
-      status: 'active'
+    return {
+      id: data.id,
+
+      userId: data.user_id,
+
+      createdAt: data.created_at,
+
+      version: data.version || "2026.1",
+
+      overallScore: Number(data.overall_score || 0),
+
+      archetypeId: data.archetype_id || "",
+
+      domainScores: data.domain_scores || {},
+
+      dimensions: data.scores || [],
+
+      aiReport: data.ai_report || undefined,
+
+      isUnlockedPremium: Boolean(
+        data.ai_report?.isUnlockedPremium ?? data.is_unlocked_premium ?? false
+      ),
+
+      completionTimeSeconds: data.completion_time_seconds || undefined,
+    };
+  },
+
+  /**
+   * Get all analysis reports for user.
+   */
+  async getUserAnalysisHistory(
+    userId: string
+  ): Promise<StoredAnalysisResult[]> {
+    const { data, error } = await s()
+      .from("analysis_reports")
+      .select("*")
+      .eq("user_id", userId)
+      .order("created_at", {
+        ascending: false,
+      });
+
+    if (error) {
+      throw error;
+    }
+
+    return (data || []).map((r: any) => ({
+      id: r.id,
+
+      userId: r.user_id,
+
+      createdAt: r.created_at,
+
+      version: r.version || "2026.1",
+
+      overallScore: Number(r.overall_score || 0),
+
+      archetypeId: r.archetype_id || "",
+
+      domainScores: r.domain_scores || {},
+
+      dimensions: r.scores || [],
+
+      aiReport: r.ai_report || undefined,
+
+      isUnlockedPremium: Boolean(r.ai_report?.isUnlockedPremium ?? false),
+
+      completionTimeSeconds: r.completion_time_seconds || undefined,
+    }));
+  },
+
+  /**
+   * Growth history.
+   *
+   * There is NO user_progress table in your DB.
+   *
+   * Therefore growth is reconstructed from analysis_reports.
+   */
+  async getGrowthHistory(userId: string): Promise<GrowthMetric[]> {
+    const { data, error } = await s()
+      .from("analysis_reports")
+      .select("created_at,domain_scores,overall_score")
+      .eq("user_id", userId)
+      .order("created_at", {
+        ascending: true,
+      });
+
+    if (error) {
+      throw error;
+    }
+
+    return (data || []).map((r: any) => {
+      const d = r.domain_scores || {};
+
+      return {
+        date: r.created_at,
+
+        discipline: Number(d.behavioral || 0),
+
+        emotionalAwareness: Number(d.emotional || 0),
+
+        confidence: Number(d.social || 0),
+
+        communication: Number(d.social || 0),
+
+        stressManagement: Number(d.lifestyle || 0),
+
+        overallScore: Number(r.overall_score || 0),
+      };
+    });
+  },
+
+  /**
+   * Notifications.
+   */
+  async addNotification(
+    userId: string,
+    notif: Omit<StoredNotification, "id" | "userId" | "createdAt" | "read">
+  ): Promise<StoredNotification> {
+    const { data, error } = await s()
+      .from("notifications")
+      .insert({
+        user_id: userId,
+
+        title: notif.title,
+
+        message: notif.message,
+
+        type: notif.type,
+
+        is_read: false,
+
+        read: false,
+
+        action_url: notif.actionUrl || null,
+      })
+      .select("*")
+      .single();
+
+    if (error || !data) {
+      throw error || new Error("Failed to create notification");
+    }
+
+    return {
+      id: data.id,
+
+      userId: data.user_id,
+
+      title: data.title,
+
+      message: data.message,
+
+      type: data.type,
+
+      read: Boolean(data.is_read ?? data.read ?? false),
+
+      createdAt: data.created_at,
+
+      actionUrl: data.action_url || undefined,
+    };
+  },
+
+  async getUserNotifications(userId: string): Promise<StoredNotification[]> {
+    const { data, error } = await s()
+      .from("notifications")
+      .select("*")
+      .eq("user_id", userId)
+      .order("created_at", {
+        ascending: false,
+      });
+
+    if (error) {
+      throw error;
+    }
+
+    return (data || []).map((n: any) => ({
+      id: n.id,
+
+      userId: n.user_id,
+
+      title: n.title,
+
+      message: n.message,
+
+      type: n.type,
+
+      read: Boolean(n.is_read ?? n.read ?? false),
+
+      createdAt: n.created_at,
+
+      actionUrl: n.action_url || undefined,
+    }));
+  },
+
+  async markNotificationRead(
+    notifId: string,
+    userId?: string
+  ): Promise<boolean> {
+    let query = s()
+      .from("notifications")
+      .update({
+        is_read: true,
+        read: true,
+      })
+      .eq("id", notifId);
+
+    if (userId) {
+      query = query.eq("user_id", userId);
+    }
+
+    const { data, error } = await query.select("id").maybeSingle();
+
+    return !error && !!data;
+  },
+
+  /**
+   * Referrals.
+   */
+  async applyReferral(
+    referrerCode: string,
+    newUserId: string,
+    newUserName: string
+  ): Promise<boolean> {
+    const { data: referrer } = await s()
+      .from("users")
+      .select("*")
+      .eq("referral_code", referrerCode)
+      .maybeSingle();
+
+    if (!referrer || referrer.id === newUserId) {
+      return false;
+    }
+
+    /**
+     * Prevent duplicate referral.
+     */
+    const { data: existingReferral } = await s()
+      .from("referrals")
+      .select("id")
+      .eq("referred_id", newUserId)
+      .maybeSingle();
+
+    if (existingReferral) {
+      return false;
+    }
+
+    const { error } = await s().from("referrals").insert({
+      referrer_id: referrer.id,
+
+      referred_id: newUserId,
+
+      xp_rewarded: 100,
+
+      status: "joined",
     });
 
-    this.addNotification(referrer.id, {
-      title: 'صديق جديد انضم عبر كودك 🎉',
+    if (error) {
+      return false;
+    }
+
+    await s()
+      .from("users")
+      .update({
+        referred_by: referrer.referral_code,
+
+        updated_at: now(),
+      })
+      .eq("id", newUserId);
+
+    await this.addXp(referrer.id, 100, "influencer");
+
+    await this.addNotification(referrer.id, {
+      title: "صديق جديد انضم عبر كودك 🎉",
+
       message: `انضم ${newUserName} إلى PERSONA وحصلت على +100 نقطة خبرة XP!`,
-      type: 'recommendation'
+
+      type: "recommendation",
     });
 
-    saveDb();
     return true;
   },
 
-  getReferrals(userId: string): StoredReferral[] {
-    if (!userId) return [];
-    db.referrals = db.referrals || [];
-    return db.referrals.filter((r) => r && r.referrerId === userId);
+  async getReferrals(userId: string): Promise<StoredReferral[]> {
+    const { data, error } = await s()
+      .from("referrals")
+      .select("*")
+      .eq("referrer_id", userId)
+      .order("created_at", {
+        ascending: false,
+      });
+
+    if (error) {
+      throw error;
+    }
+
+    const rows = data || [];
+
+    const result: StoredReferral[] = [];
+
+    for (const r of rows) {
+      let referredUserName = "User";
+
+      const { data: referredUser } = await s()
+        .from("users")
+        .select("first_name,last_name")
+        .eq("id", r.referred_id)
+        .maybeSingle();
+
+      if (referredUser) {
+        referredUserName = `${referredUser.first_name || ""} ${
+          referredUser.last_name || ""
+        }`.trim();
+      }
+
+      result.push({
+        id: r.id,
+
+        referrerId: r.referrer_id,
+
+        referredUserId: r.referred_id,
+
+        referredUserName,
+
+        createdAt: r.created_at,
+
+        rewardXp: Number(r.xp_rewarded || 0),
+
+        status: r.status === "pending" ? "pending" : "active",
+      });
+    }
+
+    return result;
   },
 
-  logAudit(action: string, userId: string, details: string, status: 'success' | 'warning' | 'error' = 'success') {
-    db.auditLogs = db.auditLogs || [];
-    db.auditLogs.unshift({
-      id: 'log_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
-      timestamp: new Date().toISOString(),
-      action,
-      userId,
-      details,
-      status
-    });
-    if (db.auditLogs.length > 200) db.auditLogs.pop();
-    saveDb();
+  /**
+   * Audit.
+   *
+   * system_logs schema was not provided.
+   *
+   * Therefore we deliberately DON'T insert an assumed schema here.
+   * Authentication must never fail because of an optional audit log.
+   */
+  async logAudit(
+    action: string,
+    userId: string,
+    details: string,
+    status: "success" | "warning" | "error" = "success"
+  ): Promise<void> {
+    try {
+      console.log(`[AUDIT:${status}]`, action, userId, details);
+    } catch {
+      // Audit is non-critical.
+    }
   },
 
-  registerUser(payload: {
+  /**
+   * Email registration.
+   */
+  async registerUser(payload: {
     email?: string;
     password?: string;
     firstName: string;
     lastName?: string;
     username?: string;
-    language?: 'ar' | 'en';
-  }): ServerUser {
-    db.users = db.users || {};
-    const cleanEmail = payload.email?.toLowerCase().trim();
-    if (cleanEmail) {
-      const existing = Object.values(db.users).find((u) => u && u.email?.toLowerCase() === cleanEmail);
-      if (existing) {
-        throw new Error('البريد الإلكتروني مسجل مسبقاً (Email already registered)');
-      }
+    language?: "ar" | "en";
+  }): Promise<ServerUser> {
+    const email = clean(payload.email).toLowerCase();
+
+    const password = payload.password || "";
+
+    const firstName = clean(payload.firstName);
+
+    if (!email || !password) {
+      throw new Error("البريد الإلكتروني وكلمة المرور مطلوبان");
     }
 
-    const generatedId = String(Date.now() + Math.floor(Math.random() * 10000));
-    const generatedTgId = Math.floor(10000000 + Math.random() * 90000000);
-    const code = 'PERSONA-' + Math.random().toString(36).substring(2, 6).toUpperCase() + Math.floor(10 + Math.random() * 90);
+    if (!firstName) {
+      throw new Error("الاسم الأول مطلوب");
+    }
 
-    const newUser: ServerUser = {
-      id: generatedId,
-      telegramId: generatedTgId,
-      email: cleanEmail,
-      passwordHash: payload.password ? Buffer.from(payload.password).toString('base64') : undefined,
-      accountCode: code,
-      firstName: payload.firstName.trim(),
-      lastName: payload.lastName?.trim(),
-      username: payload.username?.replace('@', '').trim() || `user_${generatedId.slice(-4)}`,
-      photoUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
-      language: payload.language || 'ar',
-      role: 'user',
-      createdAt: new Date().toISOString(),
-      lastLogin: new Date().toISOString(),
-      xp: 100,
-      level: 1,
-      badges: ['explorer'],
-      referralCode: code,
-      referralCount: 0,
-      onboardingCompleted: false
-    };
+    if (password.length < 6) {
+      throw new Error("كلمة المرور يجب أن تكون 6 أحرف على الأقل");
+    }
 
-    db.users[generatedId] = newUser;
-    this.logAudit('USER_REGISTER', generatedId, `New user registered via email: ${cleanEmail || 'Guest'}`);
-    saveDb();
-    return newUser;
-  },
+    /**
+     * Create REAL Supabase Auth user.
+     */
+    const { data: auth, error: authError } = await s().auth.admin.createUser({
+      email,
 
-  loginUser(identifier: string, password?: string): ServerUser | null {
-    if (!identifier) return null;
-    db.users = db.users || {};
-    const clean = identifier.toLowerCase().trim();
-    const user = Object.values(db.users).find(
-      (u) =>
-        u &&
-        (u.email?.toLowerCase() === clean ||
-          u.username?.toLowerCase() === clean ||
-          u.id === clean ||
-          String(u.telegramId) === clean ||
-          u.referralCode?.toLowerCase() === clean)
+      password,
+
+      email_confirm: true,
+
+      user_metadata: {
+        first_name: firstName,
+
+        last_name: payload.lastName,
+
+        username: payload.username,
+      },
+    });
+
+    if (authError || !auth.user) {
+      throw authError || new Error("Registration failed");
+    }
+
+    const referralCode = `PERSONA-${Math.random()
+      .toString(36)
+      .slice(2, 6)
+      .toUpperCase()}${Math.floor(10 + Math.random() * 90)}`;
+
+    const { error } = await s()
+      .from("users")
+      .insert({
+        id: auth.user.id,
+
+        email,
+
+        telegram_id: null,
+
+        first_name: firstName,
+
+        last_name: clean(payload.lastName) || null,
+
+        username: clean(payload.username?.replace("@", "")) || null,
+
+        avatar_url: null,
+
+        language: payload.language || "ar",
+
+        role: "user",
+
+        level: 1,
+
+        xp: 100,
+
+        current_streak: 1,
+
+        last_active_date: new Date().toISOString().slice(0, 10),
+
+        onboarding_completed: false,
+
+        referral_code: referralCode,
+
+        referred_by: null,
+
+        custom_settings: {},
+
+        badges: ["explorer"],
+
+        updated_at: now(),
+      });
+
+    if (error) {
+      await s().auth.admin.deleteUser(auth.user.id);
+
+      throw error;
+    }
+
+    await this.logAudit(
+      "USER_REGISTER",
+      auth.user.id,
+      `New user registered via email: ${email}`,
+      "success"
     );
 
-    if (!user) return null;
+    const user = await this.getUser(auth.user.id);
 
-    if (password && user.passwordHash) {
-      const hashed = Buffer.from(password).toString('base64');
-      if (user.passwordHash !== hashed) {
-        return null;
-      }
+    if (!user) {
+      throw new Error("Failed to load registered user");
     }
 
-    user.lastLogin = new Date().toISOString();
-    this.logAudit('USER_LOGIN', user.id, `User logged in: ${user.firstName} (@${user.username})`);
-    saveDb();
     return user;
   },
 
-  saveChatMessage(msg: StoredChatMessage): void {
-    if (!msg || !msg.userId) return;
-    db.chatHistory = db.chatHistory || {};
-    if (!db.chatHistory[msg.userId]) {
-      db.chatHistory[msg.userId] = [];
-    }
-    db.chatHistory[msg.userId].push(msg);
-    if (db.chatHistory[msg.userId].length > 100) {
-      db.chatHistory[msg.userId].shift();
-    }
-    saveDb();
-  },
+  /**
+   * Login using:
+   *
+   * email
+   * username
+   * referral code
+   * UUID
+   */
+  async loginUser(
+    identifier: string,
+    password?: string
+  ): Promise<{
+    user: ServerUser;
+    accessToken: string;
+    refreshToken?: string;
+  } | null> {
+    const cleanId = clean(identifier).toLowerCase();
 
-  getChatHistory(userId: string): StoredChatMessage[] {
-    if (!userId) return [];
-    db.chatHistory = db.chatHistory || {};
-    return db.chatHistory[userId] || [];
-  },
-
-  getUserGoals(userId: string): PersonalGoal[] {
-    if (!userId) return [];
-    db.goals = db.goals || {};
-    return db.goals[userId] || [];
-  },
-
-  saveGoal(goal: PersonalGoal): PersonalGoal {
-    db.goals = db.goals || {};
-    if (!db.goals[goal.userId]) {
-      db.goals[goal.userId] = [];
-    }
-    const existingIndex = db.goals[goal.userId].findIndex((g) => g.id === goal.id);
-    if (existingIndex >= 0) {
-      db.goals[goal.userId][existingIndex] = goal;
-    } else {
-      db.goals[goal.userId].unshift(goal);
-    }
-    this.addXp(goal.userId, 40, 'goal_hunter');
-    saveDb();
-    return goal;
-  },
-
-  updateGoal(userId: string, goalId: string, updates: Partial<PersonalGoal>): PersonalGoal | null {
-    if (!userId || !goalId) return null;
-    db.goals = db.goals || {};
-    const userGoals = db.goals[userId] || [];
-    const goal = userGoals.find((g) => g.id === goalId);
-    if (!goal) return null;
-    Object.assign(goal, updates);
-    saveDb();
-    return goal;
-  },
-
-  deleteGoal(userId: string, goalId: string): boolean {
-    if (!userId || !goalId) return false;
-    db.goals = db.goals || {};
-    if (!db.goals[userId]) return false;
-    const initialLen = db.goals[userId].length;
-    db.goals[userId] = db.goals[userId].filter((g) => g.id !== goalId);
-    saveDb();
-    return db.goals[userId].length < initialLen;
-  },
-
-  recordGoalCheckIn(
-    userId: string,
-    goalId: string,
-    checkIn: Omit<GoalCheckIn, 'id' | 'timestamp'>
-  ): { goal: PersonalGoal; checkIn: GoalCheckIn } | null {
-    if (!userId || !goalId) return null;
-    db.goals = db.goals || {};
-    const userGoals = db.goals[userId] || [];
-    const goal = userGoals.find((g) => g.id === goalId);
-    if (!goal) return null;
-
-    const newCheckIn: GoalCheckIn = {
-      id: 'chk_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
-      timestamp: new Date().toISOString(),
-      note: checkIn.note,
-      status: checkIn.status,
-      aiFeedback: checkIn.aiFeedback
-    };
-
-    goal.checkIns = goal.checkIns || [];
-    goal.checkIns.unshift(newCheckIn);
-    goal.lastCheckIn = newCheckIn.timestamp;
-
-    if (checkIn.status === 'completed') {
-      goal.streak = (goal.streak || 0) + 1;
-      goal.progress = Math.min(100, (goal.progress || 0) + 15);
-      this.addXp(userId, 30);
-    } else if (checkIn.status === 'progressed') {
-      goal.progress = Math.min(100, (goal.progress || 0) + 8);
-      this.addXp(userId, 15);
+    if (!cleanId || !password) {
+      return null;
     }
 
-    saveDb();
-    return { goal, checkIn: newCheckIn };
-  },
+    let email = cleanId;
 
-  // -------------------------------------------------------------
-  // Growth Challenges Methods
-  // -------------------------------------------------------------
-  getUserChallenges(userId: string): GrowthChallenge[] {
-    if (!userId) return [];
-    db.challenges = db.challenges || {};
-    return db.challenges[userId] || [];
-  },
+    /**
+     * If identifier is not email,
+     * resolve it through users.
+     */
+    if (!cleanId.includes("@")) {
+      let row: any = null;
 
-  getActiveChallenge(userId: string): GrowthChallenge | null {
-    if (!userId) return null;
-    db.challenges = db.challenges || {};
-    const userChallenges = db.challenges[userId] || [];
-    const now = new Date().getTime();
+      /**
+       * username
+       */
+      const { data: usernameRow } = await s()
+        .from("users")
+        .select("email")
+        .ilike("username", cleanId)
+        .maybeSingle();
 
-    // Check for an active non-expired challenge
-    for (const c of userChallenges) {
-      if (c.status === 'active') {
-        const expTime = new Date(c.expiresAt).getTime();
-        if (now > expTime) {
-          c.status = 'expired';
-          saveDb();
-        } else {
-          return c;
-        }
+      row = usernameRow;
+
+      /**
+       * referral code
+       */
+      if (!row) {
+        const { data: referralRow } = await s()
+          .from("users")
+          .select("email")
+          .ilike("referral_code", cleanId)
+          .maybeSingle();
+
+        row = referralRow;
       }
-    }
-    return null;
-  },
 
-  saveChallenge(userId: string, challenge: GrowthChallenge): GrowthChallenge {
-    if (!userId) return challenge;
-    db.challenges = db.challenges || {};
-    if (!db.challenges[userId]) {
-      db.challenges[userId] = [];
+      /**
+       * UUID
+       */
+      if (!row && isUuid(cleanId)) {
+        const { data: uuidRow } = await s()
+          .from("users")
+          .select("email")
+          .eq("id", cleanId)
+          .maybeSingle();
+
+        row = uuidRow;
+      }
+
+      if (!row?.email) {
+        return null;
+      }
+
+      email = row.email;
     }
 
-    // Archive or update existing active challenge if replacing
-    db.challenges[userId] = db.challenges[userId].map((c) => {
-      if (c.id === challenge.id) return challenge;
-      if (c.status === 'active') return { ...c, status: 'expired' as const };
-      return c;
+    /**
+     * REAL Supabase Auth login.
+     */
+    const { data, error } = await getSupabaseAuth().auth.signInWithPassword({
+      email,
+      password,
     });
 
-    if (!db.challenges[userId].some((c) => c.id === challenge.id)) {
-      db.challenges[userId].unshift(challenge);
+    if (error || !data.user || !data.session) {
+      return null;
     }
 
-    saveDb();
+    /**
+     * Update activity.
+     */
+    await s()
+      .from("users")
+      .update({
+        updated_at: now(),
+
+        last_active_date: new Date().toISOString().slice(0, 10),
+      })
+      .eq("id", data.user.id);
+
+    await this.logAudit(
+      "USER_LOGIN",
+      data.user.id,
+      "User logged in through Supabase Auth",
+      "success"
+    );
+
+    const user = await this.getUser(data.user.id);
+
+    if (!user) {
+      return null;
+    }
+
+    return {
+      user,
+
+      accessToken: data.session.access_token,
+
+      refreshToken: data.session.refresh_token,
+    };
+  },
+
+  /**
+   * Chat history.
+   */
+  async saveChatMessage(msg: StoredChatMessage): Promise<void> {
+    const { error } = await s()
+      .from("chat_history")
+      .insert({
+        user_id: msg.userId,
+
+        message_id: msg.id,
+
+        role: msg.role,
+
+        text: msg.text,
+
+        timestamp: msg.timestamp,
+
+        suggested_questions: msg.suggestedQuestions || [],
+      });
+
+    if (error) {
+      throw error;
+    }
+  },
+
+  async getChatHistory(userId: string): Promise<StoredChatMessage[]> {
+    const { data, error } = await s()
+      .from("chat_history")
+      .select("*")
+      .eq("user_id", userId)
+      .order("timestamp", {
+        ascending: true,
+      })
+      .limit(100);
+
+    if (error) {
+      throw error;
+    }
+
+    return (data || []).map((m: any) => ({
+      id: m.message_id || m.id,
+
+      userId: m.user_id,
+
+      role: m.role,
+
+      text: m.text,
+
+      timestamp: m.timestamp,
+
+      suggestedQuestions: m.suggested_questions || [],
+    }));
+  },
+
+  /**
+   * PERSONAL GOALS
+   *
+   * Real table:
+   * personal_goals
+   *
+   * Goal check-ins:
+   * goal_checkins
+   */
+  async getUserGoals(userId: string): Promise<PersonalGoal[]> {
+    const { data, error } = await s()
+      .from("personal_goals")
+      .select("*")
+      .eq("user_id", userId)
+      .order("created_at", {
+        ascending: false,
+      });
+
+    if (error) {
+      throw error;
+    }
+
+    const goals = data || [];
+
+    const result: PersonalGoal[] = [];
+
+    for (const row of goals) {
+      const { data: checkins } = await s()
+        .from("goal_checkins")
+        .select("*")
+        .eq("goal_id", row.id)
+        .eq("user_id", userId)
+        .order("created_at", {
+          ascending: false,
+        });
+
+      result.push({
+        id: row.id,
+
+        userId: row.user_id,
+
+        title: row.title_ar || row.title_en || "",
+
+        category: row.category || "mindset",
+
+        targetFrequency: row.frequency || "daily",
+
+        targetDaysPerWeek: row.target_count || undefined,
+
+        progress: row.target_count
+          ? Math.min(
+              100,
+              Math.round(
+                (Number(row.total_completions || 0) /
+                  Number(row.target_count)) *
+                  100
+              )
+            )
+          : 0,
+
+        streak: Number(row.current_streak || 0),
+
+        createdAt: row.created_at,
+
+        lastCheckIn: row.last_check_in_date
+          ? `${row.last_check_in_date}T00:00:00.000Z`
+          : undefined,
+
+        checkIns: (checkins || []).map((c: any) => ({
+          id: c.id,
+
+          timestamp: c.created_at,
+
+          note: c.reflection_note || undefined,
+
+          status:
+            c.status === "completed"
+              ? "completed"
+              : c.status === "progressed"
+              ? "progressed"
+              : "struggled",
+
+          aiFeedback: c.ai_feedback || undefined,
+        })),
+
+        aiCheckInPrompt: row.ai_prompt || undefined,
+      });
+    }
+
+    return result;
+  },
+
+  async saveGoal(goal: PersonalGoal): Promise<PersonalGoal> {
+    const existing = await s()
+      .from("personal_goals")
+      .select("id")
+      .eq("id", goal.id)
+      .maybeSingle();
+
+    const dimensionMap: Record<
+      string,
+      {
+        key: string;
+        ar: string;
+        en: string;
+      }
+    > = {
+      habits: {
+        key: "habits",
+        ar: "العادات",
+        en: "Habits",
+      },
+      focus: {
+        key: "focus",
+        ar: "التركيز",
+        en: "Focus",
+      },
+      vitality: {
+        key: "vitality",
+        ar: "الحيوية",
+        en: "Vitality",
+      },
+      mindset: {
+        key: "mindset",
+        ar: "العقلية",
+        en: "Mindset",
+      },
+      emotional: {
+        key: "emotional",
+        ar: "الوعي العاطفي",
+        en: "Emotional Awareness",
+      },
+      social: {
+        key: "social",
+        ar: "التواصل الاجتماعي",
+        en: "Social",
+      },
+      career: {
+        key: "career",
+        ar: "المسار المهني",
+        en: "Career",
+      },
+    };
+
+    const dimension = dimensionMap[goal.category] || {
+      key: goal.category || "habits",
+      ar: goal.category || "العادات",
+      en: goal.category || "Habits",
+    };
+
+    const row = {
+      id: goal.id,
+      user_id: goal.userId,
+
+      dimension_key: dimension.key,
+      dimension_name_ar: dimension.ar,
+      dimension_name_en: dimension.en,
+
+      title_ar: goal.title,
+      title_en: goal.title,
+
+      category: goal.category,
+      frequency: goal.targetFrequency,
+      target_count: goal.targetDaysPerWeek || 1,
+
+      current_streak: goal.streak || 0,
+      last_streak: goal.streak || 0,
+
+      total_completions: (goal.checkIns || []).filter(
+        (c) => c.status === "completed"
+      ).length,
+
+      last_check_in_date: goal.lastCheckIn
+        ? goal.lastCheckIn.slice(0, 10)
+        : null,
+
+      ai_prompt: goal.aiCheckInPrompt || null,
+
+      is_active: true,
+      created_at: goal.createdAt || now(),
+      updated_at: now(),
+    };
+
+    const { error } = await s().from("personal_goals").upsert(row);
+
+    if (error) {
+      throw error;
+    }
+    /**
+     * Only award XP on creation,
+     * not every update.
+     */
+    if (!existing.data) {
+      await this.addXp(goal.userId, 40, "goal_hunter");
+    }
+
+    return goal;
+  },
+
+  async updateGoal(
+    userId: string,
+    goalId: string,
+    updates: Partial<PersonalGoal>
+  ): Promise<PersonalGoal | null> {
+    const { data, error } = await s()
+      .from("personal_goals")
+      .select("*")
+      .eq("id", goalId)
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    if (error || !data) {
+      return null;
+    }
+
+    const patch: Record<string, any> = {
+      updated_at: now(),
+    };
+
+    if (updates.title !== undefined) {
+      patch.title_ar = updates.title;
+
+      patch.title_en = updates.title;
+    }
+
+    if (updates.category !== undefined) {
+      patch.category = updates.category;
+    }
+
+    if (updates.targetFrequency !== undefined) {
+      patch.frequency = updates.targetFrequency;
+    }
+
+    if (updates.targetDaysPerWeek !== undefined) {
+      patch.target_count = updates.targetDaysPerWeek;
+    }
+
+    if (updates.streak !== undefined) {
+      patch.current_streak = updates.streak;
+    }
+
+    if (updates.lastCheckIn !== undefined) {
+      patch.last_check_in_date = updates.lastCheckIn
+        ? updates.lastCheckIn.slice(0, 10)
+        : null;
+    }
+
+    if (updates.aiCheckInPrompt !== undefined) {
+      patch.ai_prompt = updates.aiCheckInPrompt;
+    }
+
+    const { error: updateError } = await s()
+      .from("personal_goals")
+      .update(patch)
+      .eq("id", goalId)
+      .eq("user_id", userId);
+
+    if (updateError) {
+      throw updateError;
+    }
+
+    const updated = await s()
+      .from("personal_goals")
+      .select("*")
+      .eq("id", goalId)
+      .eq("user_id", userId)
+      .single();
+
+    if (updated.error) {
+      throw updated.error;
+    }
+
+    return this.getUserGoals(userId).then(
+      (goals) => goals.find((g) => g.id === goalId) || null
+    );
+  },
+
+  async deleteGoal(userId: string, goalId: string): Promise<boolean> {
+    const { error, count } = await s()
+      .from("personal_goals")
+      .delete({
+        count: "exact",
+      })
+      .eq("id", goalId)
+      .eq("user_id", userId);
+
+    return !error && (count || 0) > 0;
+  },
+
+  /**
+   * Record check-in in goal_checkins.
+   *
+   * Also updates aggregate fields on personal_goals.
+   */
+  async recordGoalCheckIn(
+    userId: string,
+    goalId: string,
+    checkIn: Omit<GoalCheckIn, "id" | "timestamp">
+  ): Promise<{
+    goal: PersonalGoal;
+    checkIn: GoalCheckIn;
+  } | null> {
+    const { data: goal } = await s()
+      .from("personal_goals")
+      .select("*")
+      .eq("id", goalId)
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    if (!goal) {
+      return null;
+    }
+
+    const checkInId = randomUUID();
+
+    const timestamp = now();
+
+    let xpAwarded = 0;
+
+    if (checkIn.status === "completed") {
+      xpAwarded = 30;
+    } else if (checkIn.status === "progressed") {
+      xpAwarded = 15;
+    }
+
+    const { error } = await s()
+      .from("goal_checkins")
+      .insert({
+        id: checkInId,
+
+        goal_id: goalId,
+
+        user_id: userId,
+
+        check_in_date: timestamp.slice(0, 10),
+
+        status: checkIn.status,
+
+        reflection_note: checkIn.note || null,
+
+        ai_feedback: checkIn.aiFeedback || null,
+
+        xp_awarded: xpAwarded,
+
+        created_at: timestamp,
+      });
+
+    if (error) {
+      throw error;
+    }
+
+    let currentStreak = Number(goal.current_streak || 0);
+
+    let totalCompletions = Number(goal.total_completions || 0);
+
+    if (checkIn.status === "completed") {
+      currentStreak += 1;
+      totalCompletions += 1;
+    } else if (checkIn.status === "struggled") {
+      currentStreak = 0;
+    }
+
+    const { error: updateError } = await s()
+      .from("personal_goals")
+      .update({
+        current_streak: currentStreak,
+
+        last_streak: currentStreak,
+
+        total_completions: totalCompletions,
+
+        last_check_in_date: timestamp.slice(0, 10),
+
+        updated_at: timestamp,
+      })
+      .eq("id", goalId)
+      .eq("user_id", userId);
+
+    if (updateError) {
+      throw updateError;
+    }
+
+    if (xpAwarded > 0) {
+      await this.addXp(userId, xpAwarded);
+    }
+
+    const updatedGoals = await this.getUserGoals(userId);
+
+    const updatedGoal = updatedGoals.find((g) => g.id === goalId);
+
+    if (!updatedGoal) {
+      return null;
+    }
+
+    const newCheckIn: GoalCheckIn = {
+      id: checkInId,
+
+      timestamp,
+
+      note: checkIn.note,
+
+      status: checkIn.status,
+
+      aiFeedback: checkIn.aiFeedback,
+    };
+
+    return {
+      goal: updatedGoal,
+
+      checkIn: newCheckIn,
+    };
+  },
+
+  /**
+   * GROWTH CHALLENGES
+   *
+   * Uses the real normalized columns.
+   */
+  async getUserChallenges(userId: string): Promise<GrowthChallenge[]> {
+    const { data, error } = await s()
+      .from("growth_challenges")
+      .select("*")
+      .eq("user_id", userId)
+      .order("created_at", {
+        ascending: false,
+      });
+
+    if (error) {
+      throw error;
+    }
+
+    return (data || []).map((row: any) => this.mapChallenge(row));
+  },
+
+  mapChallenge(row: any): GrowthChallenge {
+    return {
+      id: row.id,
+
+      userId: row.user_id,
+
+      dimensionKey: row.dimension_key,
+
+      dimensionNameAr: row.dimension_name_ar,
+
+      dimensionNameEn: row.dimension_name_en,
+
+      dimensionScore: Number(row.dimension_score || 0),
+
+      titleAr: row.title_ar,
+
+      titleEn: row.title_en,
+
+      descriptionAr: row.description_ar,
+
+      descriptionEn: row.description_en,
+
+      actionStepsAr: Array.isArray(row.action_steps_ar)
+        ? row.action_steps_ar
+        : [],
+
+      actionStepsEn: Array.isArray(row.action_steps_en)
+        ? row.action_steps_en
+        : [],
+
+      scientificRationaleAr: row.scientific_rationale_ar || "",
+
+      scientificRationaleEn: row.scientific_rationale_en || "",
+
+      durationHours: Number(row.duration_hours || 24),
+
+      xpReward: Number(row.xp_reward || 50),
+
+      status:
+        row.status === "completed"
+          ? "completed"
+          : row.status === "expired"
+          ? "expired"
+          : "active",
+
+      startedAt: row.started_at,
+
+      expiresAt:
+        row.expires_at ||
+        new Date(
+          new Date(row.started_at).getTime() +
+            Number(row.duration_hours || 24) * 60 * 60 * 1000
+        ).toISOString(),
+
+      completedAt: row.completed_at || undefined,
+
+      reflectionNote: row.user_reflection || undefined,
+
+      aiEvaluation: row.ai_completion_feedback || undefined,
+
+      /**
+       * These two fields don't exist
+       * as columns in your current DB.
+       * Safe defaults.
+       */
+      difficulty: "standard",
+
+      category: "mindset",
+    };
+  },
+
+  async getActiveChallenge(userId: string): Promise<GrowthChallenge | null> {
+    const { data, error } = await s()
+      .from("growth_challenges")
+      .select("*")
+      .eq("user_id", userId)
+      .eq("status", "active")
+      .order("started_at", {
+        ascending: false,
+      })
+      .limit(1)
+      .maybeSingle();
+
+    if (error || !data) {
+      return null;
+    }
+
+    const challenge = this.mapChallenge(data);
+
+    if (
+      challenge.expiresAt &&
+      new Date(challenge.expiresAt).getTime() < Date.now()
+    ) {
+      await s()
+        .from("growth_challenges")
+        .update({
+          status: "expired",
+        })
+        .eq("id", challenge.id)
+        .eq("user_id", userId);
+
+      return null;
+    }
+
     return challenge;
   },
 
-  completeChallenge(
+  async saveChallenge(
+    userId: string,
+    challenge: GrowthChallenge
+  ): Promise<GrowthChallenge> {
+    /**
+     * Ensure only one active challenge.
+     */
+    if (challenge.status === "active") {
+      await s()
+        .from("growth_challenges")
+        .update({
+          status: "expired",
+        })
+        .eq("user_id", userId)
+        .eq("status", "active")
+        .neq("id", challenge.id);
+    }
+
+    const { error } = await s()
+      .from("growth_challenges")
+      .upsert({
+        id: challenge.id,
+
+        user_id: userId,
+
+        dimension_key: challenge.dimensionKey,
+
+        dimension_name_ar: challenge.dimensionNameAr,
+
+        dimension_name_en: challenge.dimensionNameEn,
+
+        dimension_score: challenge.dimensionScore,
+
+        title_ar: challenge.titleAr,
+
+        title_en: challenge.titleEn,
+
+        description_ar: challenge.descriptionAr,
+
+        description_en: challenge.descriptionEn,
+
+        action_steps_ar: challenge.actionStepsAr,
+
+        action_steps_en: challenge.actionStepsEn,
+
+        scientific_rationale_ar: challenge.scientificRationaleAr,
+
+        scientific_rationale_en: challenge.scientificRationaleEn,
+
+        duration_hours: challenge.durationHours,
+
+        xp_reward: challenge.xpReward,
+
+        status: challenge.status,
+
+        user_reflection: challenge.reflectionNote || null,
+
+        ai_completion_feedback: challenge.aiEvaluation || null,
+
+        started_at: challenge.startedAt || now(),
+
+        expires_at: challenge.expiresAt || null,
+
+        completed_at: challenge.completedAt || null,
+
+        updated_at: now(),
+      });
+
+    if (error) {
+      throw error;
+    }
+
+    return challenge;
+  },
+
+  async completeChallenge(
     userId: string,
     challengeId: string,
     reflectionNote?: string,
     aiEvaluation?: string
-  ): { challenge: GrowthChallenge; xpEarned: number } | null {
-    if (!userId || !challengeId) return null;
-    db.challenges = db.challenges || {};
-    const userChallenges = db.challenges[userId] || [];
-    const challenge = userChallenges.find((c) => c.id === challengeId);
-    if (!challenge) return null;
+  ): Promise<{
+    challenge: GrowthChallenge;
+    xpEarned: number;
+  } | null> {
+    const { data, error } = await s()
+      .from("growth_challenges")
+      .select("*")
+      .eq("id", challengeId)
+      .eq("user_id", userId)
+      .maybeSingle();
 
-    challenge.status = 'completed';
-    challenge.completedAt = new Date().toISOString();
-    challenge.reflectionNote = reflectionNote || '';
-    challenge.aiEvaluation = aiEvaluation || '';
-
-    const xpEarned = challenge.xpReward || 60;
-    this.addXp(userId, xpEarned);
-
-    saveDb();
-    return { challenge, xpEarned };
-  },
-
-  getAdminStats(): Record<string, any> {
-    const userList = Object.values(db.users);
-    const reports = Object.values(db.analysisResults);
-    const premiumCount = userList.filter((u) => u.role === 'premium' || u.role === 'admin' || u.role === 'super_admin').length;
-
-    const archetypeCounts: Record<string, number> = {};
-    let totalScore = 0;
-    for (const r of reports) {
-      archetypeCounts[r.archetypeId] = (archetypeCounts[r.archetypeId] || 0) + 1;
-      totalScore += r.overallScore;
+    if (error || !data) {
+      return null;
     }
 
-    const topArchetypes = Object.entries(archetypeCounts)
-      .map(([id, count]) => ({
-        id,
-        name: ARCHETYPES[id]?.nameAr || id,
-        nameEn: ARCHETYPES[id]?.nameEn || id,
-        count
-      }))
-      .sort((a, b) => b.count - a.count);
+    const challenge = this.mapChallenge(data);
+
+    const xpEarned = challenge.xpReward || 60;
+
+    const completedAt = now();
+
+    const { error: updateError } = await s()
+      .from("growth_challenges")
+      .update({
+        status: "completed",
+
+        completed_at: completedAt,
+
+        user_reflection: reflectionNote || "",
+
+        ai_completion_feedback: aiEvaluation || null,
+      })
+      .eq("id", challengeId)
+      .eq("user_id", userId);
+
+    if (updateError) {
+      throw updateError;
+    }
+
+    await this.addXp(userId, xpEarned);
 
     return {
-      totalUsers: userList.length,
-      activeUsers24h: Math.max(1, userList.filter((u) => Date.now() - new Date(u.lastLogin).getTime() < 86400000).length),
-      newUsers7d: userList.length,
-      completedAnalyses: reports.length,
-      premiumUsers: premiumCount,
-      revenueEst: premiumCount * 14.99,
-      aiRequestsCount: reports.length * 3 + 12,
-      averageScore: reports.length ? Math.round(totalScore / reports.length) : 82,
-      topArchetypes,
-      recentLogs: db.auditLogs.slice(0, 15),
-      users: userList.slice(0, 50)
-    };
-  }
-};
+      challenge: {
+        ...challenge,
 
-// Initialize DB immediately on load
-Db.init();
+        status: "completed",
+
+        completedAt,
+
+        reflectionNote: reflectionNote || "",
+
+        aiEvaluation: aiEvaluation || "",
+      },
+
+      xpEarned,
+    };
+  },
+
+  /**
+   * ADMIN STATS
+   */
+  async getAdminStats(): Promise<Record<string, any>> {
+    const [usersResult, reportsResult, xpLogsResult] = await Promise.all([
+      s()
+        .from("users")
+        .select("*")
+        .order("created_at", {
+          ascending: false,
+        })
+        .limit(1000),
+
+      s()
+        .from("analysis_reports")
+        .select("archetype_id,overall_score,created_at"),
+
+      s()
+        .from("xp_logs")
+        .select("*")
+        .order("created_at", {
+          ascending: false,
+        })
+        .limit(15),
+    ]);
+
+    const users = usersResult.data || [];
+    const reports = reportsResult.data || [];
+    const logs = xpLogsResult.data || [];
+
+    // ==========================================
+    // REAL SUPABASE AUTH USERS
+    // ==========================================
+
+    const authUsersMap = new Map<string, any>();
+
+    try {
+      let page = 1;
+      const perPage = 1000;
+
+      while (true) {
+        const { data, error } = await getSupabaseAuth().auth.admin.listUsers({
+          page,
+          perPage,
+        });
+
+        if (error) {
+          console.error("[AdminStats] Auth users error:", error);
+          break;
+        }
+
+        for (const authUser of data.users || []) {
+          authUsersMap.set(authUser.id, authUser);
+        }
+
+        if (!data.users || data.users.length < perPage) {
+          break;
+        }
+
+        page++;
+      }
+    } catch (error) {
+      console.error("[AdminStats] Failed to load Supabase Auth users:", error);
+    }
+
+    // ==========================================
+    // REFERRALS
+    // ==========================================
+
+    const referralCounts = new Map<string, number>();
+
+    const { data: referrals } = await s()
+      .from("referrals")
+      .select("referrer_id");
+
+    for (const referral of referrals || []) {
+      const id = referral.referrer_id;
+
+      referralCounts.set(id, (referralCounts.get(id) || 0) + 1);
+    }
+
+    // ==========================================
+    // MERGE DATABASE USERS + SUPABASE AUTH
+    // ==========================================
+
+    const list = users.map((u: any) => {
+      const mapped = mapUser(u, referralCounts.get(u.id) || 0);
+
+      const authUser = authUsersMap.get(u.id);
+
+      return {
+        ...mapped,
+
+        // Real email from Supabase Auth when available
+        email: authUser?.email || mapped.email || undefined,
+
+        // Real Auth creation time
+        createdAt: authUser?.created_at || mapped.createdAt,
+
+        // REAL LAST SIGN IN FROM SUPABASE AUTH
+        lastLogin: authUser?.last_sign_in_at || mapped.lastLogin || undefined,
+      };
+    });
+
+    // ==========================================
+    // PREMIUM
+    // ==========================================
+
+    const premiumUsers = list.filter((u) =>
+      ["premium", "admin", "super_admin"].includes(u.role)
+    );
+
+    // ==========================================
+    // ARCHETYPES
+    // ==========================================
+
+    const counts: Record<string, number> = {};
+
+    for (const report of reports) {
+      const id = report.archetype_id || "unknown";
+
+      counts[id] = (counts[id] || 0) + 1;
+    }
+
+    // ==========================================
+    // ACTIVITY
+    // ==========================================
+
+    const nowMs = Date.now();
+
+    const activeUsers24h = list.filter((u) => {
+      if (!u.lastLogin) return false;
+
+      const loginTime = new Date(u.lastLogin).getTime();
+
+      return !Number.isNaN(loginTime) && nowMs - loginTime < 86400000;
+    }).length;
+
+    // ==========================================
+    // NEW USERS
+    // ==========================================
+
+    const newUsers7d = list.filter((u) => {
+      const createdTime = new Date(u.createdAt).getTime();
+
+      return !Number.isNaN(createdTime) && nowMs - createdTime < 7 * 86400000;
+    }).length;
+
+    // ==========================================
+    // AVERAGE SCORE
+    // ==========================================
+
+    const averageScore = reports.length
+      ? Math.round(
+          reports.reduce(
+            (sum: number, report: any) =>
+              sum + Number(report.overall_score || 0),
+            0
+          ) / reports.length
+        )
+      : 0;
+
+    // ==========================================
+    // AI REQUESTS
+    // ==========================================
+
+    let aiRequestsCount = 0;
+
+    try {
+      const { count } = await s().from("ai_requests").select("id", {
+        count: "exact",
+        head: true,
+      });
+
+      aiRequestsCount = count || 0;
+    } catch {
+      aiRequestsCount = 0;
+    }
+
+    // ==========================================
+    // RETURN ADMIN TELEMETRY
+    // ==========================================
+
+    return {
+      totalUsers: list.length,
+
+      activeUsers24h,
+
+      newUsers7d,
+
+      completedAnalyses: reports.length,
+
+      premiumUsers: premiumUsers.length,
+
+      revenueEst: premiumUsers.length * 14.99,
+
+      aiRequestsCount,
+
+      averageScore,
+
+      topArchetypes: Object.entries(counts)
+        .map(([id, count]) => ({
+          id,
+          name: id,
+          nameEn: id,
+          count,
+        }))
+        .sort((a: any, b: any) => b.count - a.count),
+
+      recentLogs: logs,
+
+      // USERS FOR ADMIN DASHBOARD
+      users: list.slice(0, 50),
+    };
+  },
+};

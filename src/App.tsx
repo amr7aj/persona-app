@@ -1,29 +1,36 @@
-import React from 'react';
-import { AppProvider, useApp } from './context/AppContext';
-import { Header } from './components/common/Header';
-import { BottomNav } from './components/common/BottomNav';
-import { ShareModal } from './components/common/ShareModal';
-import { PremiumModal } from './components/common/PremiumModal';
-import { FloatingCoachWidget } from './components/common/FloatingCoachWidget';
-import { HomeDashboard } from './components/views/HomeDashboard';
-import { OnboardingView } from './components/views/OnboardingView';
-import { AnalysisQuizView } from './components/views/AnalysisQuizView';
-import { LoadingAnalysisView } from './components/views/LoadingAnalysisView';
-import { ResultsView } from './components/views/ResultsView';
-import { DimensionViews } from './components/views/DimensionViews';
-import { GrowthProgressView } from './components/views/GrowthProgressView';
-import { ReportsHistoryView } from './components/views/ReportsHistoryView';
-import { UserProfileView } from './components/views/UserProfileView';
-import { ReferralHubView } from './components/views/ReferralHubView';
-import { TelegramBotSimulator } from './components/views/TelegramBotSimulator';
-import { AdminDashboardView } from './components/views/AdminDashboardView';
-import { AuthView } from './components/views/AuthView';
-import { PersonalGoalsView } from './components/views/PersonalGoalsView';
-import { SettingsView } from './components/views/SettingsView';
+import React from "react";
+import { AppProvider, useApp } from "./context/AppContext";
+
+import { Header } from "./components/common/Header";
+import { BottomNav } from "./components/common/BottomNav";
+import { ShareModal } from "./components/common/ShareModal";
+import { PremiumModal } from "./components/common/PremiumModal";
+import { FloatingCoachWidget } from "./components/common/FloatingCoachWidget";
+
+import { HomeDashboard } from "./components/views/HomeDashboard";
+import { OnboardingView } from "./components/views/OnboardingView";
+import { AnalysisQuizView } from "./components/views/AnalysisQuizView";
+import { LoadingAnalysisView } from "./components/views/LoadingAnalysisView";
+import { ResultsView } from "./components/views/ResultsView";
+import { DimensionViews } from "./components/views/DimensionViews";
+import { GrowthProgressView } from "./components/views/GrowthProgressView";
+import { ReportsHistoryView } from "./components/views/ReportsHistoryView";
+import { UserProfileView } from "./components/views/UserProfileView";
+import { ReferralHubView } from "./components/views/ReferralHubView";
+import { AdminDashboardView } from "./components/views/AdminDashboardView";
+import { AuthView } from "./components/views/AuthView";
+import { PersonalGoalsView } from "./components/views/PersonalGoalsView";
+import { SettingsView } from "./components/views/SettingsView";
 
 const AppContent: React.FC = () => {
-  const { currentView, loading } = useApp();
+  const { currentView, loading, user, setView } = useApp();
 
+  /*
+   * Authentication Gate
+   *
+   * While the application is checking the session, show only
+   * the loading screen.
+   */
   if (loading) {
     return (
       <div className="min-h-screen bg-[#0B0B0F] flex flex-col items-center justify-center text-center p-6 space-y-4">
@@ -32,10 +39,59 @@ const AppContent: React.FC = () => {
             P
           </div>
         </div>
+
         <div className="space-y-1">
-          <h2 className="text-sm font-bold text-white tracking-widest font-mono">PERSONA AI</h2>
-          <p className="text-xs text-[#9CA3AF]">Initializing Intelligence Engine...</p>
+          <h2 className="text-sm font-bold text-white tracking-widest font-mono">
+            PERSONA AI
+          </h2>
+
+          <p className="text-xs text-[#9CA3AF]">
+            Initializing Intelligence Engine...
+          </p>
         </div>
+      </div>
+    );
+  }
+
+  /*
+   * HARD AUTHENTICATION GATE
+   *
+   * If there is no authenticated user, render ONLY AuthView.
+   *
+   * This prevents:
+   * - Header
+   * - BottomNav
+   * - Dashboard
+   * - Goals
+   * - Settings
+   * - Profile
+   * - Reports
+   * - etc.
+   *
+   * from being accessible before login.
+   */
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-[#0B0B0F] text-zinc-100">
+        <AuthView />
+      </div>
+    );
+  }
+
+  /*
+   * From this point onward the user exists,
+   * so the authenticated application can be rendered.
+   */
+
+  /*
+   * If somehow currentView is still "auth" after successful login,
+   * move the user into the application.
+   */
+  if (currentView === "auth") {
+    setView(user.onboardingCompleted ? "home" : "onboarding");
+    return (
+      <div className="min-h-screen bg-[#0B0B0F] flex items-center justify-center">
+        <div className="text-sm text-[#9CA3AF]">Loading PERSONA...</div>
       </div>
     );
   }
@@ -45,26 +101,42 @@ const AppContent: React.FC = () => {
       <Header />
 
       <main className="flex-1 w-full">
-        {currentView === 'home' && <HomeDashboard />}
-        {currentView === 'goals' && <PersonalGoalsView />}
-        {currentView === 'settings' && <SettingsView />}
-        {currentView === 'auth' && <AuthView />}
-        {currentView === 'onboarding' && <OnboardingView />}
-        {currentView === 'analysis' && <AnalysisQuizView />}
-        {currentView === 'loading' && <LoadingAnalysisView />}
-        {currentView === 'results' && <ResultsView />}
-        {currentView === 'dimension' && <DimensionViews />}
-        {currentView === 'growth' && <GrowthProgressView />}
-        {currentView === 'reports' && <ReportsHistoryView />}
-        {currentView === 'profile' && <UserProfileView />}
-        {currentView === 'referrals' && <ReferralHubView />}
-        {/*currentView === 'bot' && <TelegramBotSimulator />*/}
-        {currentView === 'admin' && <AdminDashboardView />}
+        {currentView === "home" && <HomeDashboard />}
+
+        {currentView === "goals" && <PersonalGoalsView />}
+
+        {currentView === "settings" && <SettingsView />}
+
+        {currentView === "onboarding" && <OnboardingView />}
+
+        {currentView === "analysis" && <AnalysisQuizView />}
+
+        {currentView === "loading" && <LoadingAnalysisView />}
+
+        {currentView === "results" && <ResultsView />}
+
+        {currentView === "dimension" && <DimensionViews />}
+
+        {currentView === "growth" && <GrowthProgressView />}
+
+        {currentView === "reports" && <ReportsHistoryView />}
+
+        {currentView === "profile" && <UserProfileView />}
+
+        {currentView === "referrals" && <ReferralHubView />}
+
+        {/* Telegram simulator disabled */}
+        {/* {currentView === "bot" && <TelegramBotSimulator />} */}
+
+        {currentView === "admin" && <AdminDashboardView />}
       </main>
 
       <BottomNav />
+
       <ShareModal />
+
       <PremiumModal />
+
       <FloatingCoachWidget />
     </div>
   );

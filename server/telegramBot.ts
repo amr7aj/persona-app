@@ -12,12 +12,12 @@ export interface TelegramBotMessageResponse {
   parse_mode?: 'HTML' | 'Markdown';
 }
 
-export function handleBotCommand(
+export async function handleBotCommand(
   command: string,
   fromUser: { id: number; first_name: string; username?: string; language_code?: string },
   appUrl: string
-): TelegramBotMessageResponse {
-  const user = Db.getOrCreateUser(fromUser);
+): Promise<TelegramBotMessageResponse> {  const session = await Db.getOrCreateUser(fromUser);
+  const user = session.user;
   const cmd = command.trim().toLowerCase();
   const isAr = !user.language || user.language === 'ar';
   const webAppUrl = appUrl.startsWith('http') ? appUrl : `https://${appUrl}`;
@@ -47,7 +47,7 @@ export function handleBotCommand(
   }
 
   if (cmd.startsWith('/profile') || cmd.startsWith('view_profile')) {
-    const history = Db.getUserAnalysisHistory(user.id);
+    const history = await Db.getUserAnalysisHistory(user.id);
     const latest = history[0];
     const archetype = latest ? ARCHETYPES[latest.archetypeId] : null;
 
@@ -76,7 +76,7 @@ export function handleBotCommand(
   }
 
   if (cmd.startsWith('/results')) {
-    const history = Db.getUserAnalysisHistory(user.id);
+    const history = await Db.getUserAnalysisHistory(user.id);
     if (!history.length) {
       return {
         text: isAr
@@ -121,7 +121,7 @@ export function handleBotCommand(
       };
     }
 
-    const stats = Db.getAdminStats();
+    const stats = await Db.getAdminStats();
     return {
       text: isAr
         ? `🛡️ <b>لوحة تحكم المشرف — PERSONA Core</b>\n\n• إجمالي المستخدمين: <b>${stats.totalUsers}</b>\n• النشطون (24h): <b>${stats.activeUsers24h}</b>\n• التحليلات المكتملة: <b>${stats.completedAnalyses}</b>\n• المشتركون Premium: <b>${stats.premiumUsers}</b>\n• طلبات AI: <b>${stats.aiRequestsCount}</b>\n• الإيرادات التقديرية: <b>$${stats.revenueEst}</b>`

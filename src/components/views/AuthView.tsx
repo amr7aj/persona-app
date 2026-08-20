@@ -129,7 +129,9 @@ export const AuthView: React.FC = () => {
   const handleTelegramAuth = async () => {
     setIsLoading(true);
     try {
-      const auth = await Api.authenticateTelegram();
+      const initData = (window as any).Telegram?.WebApp?.initData;
+      if (!initData) throw new Error(isAr ? 'افتح التطبيق من Telegram لإتمام المصادقة' : 'Open the app from Telegram to authenticate');
+      const auth = await Api.authenticateTelegram(initData);
       await switchUser(auth.user);
       setSuccessMsg(isAr ? 'تم الربط التلقائي بحساب Telegram' : 'Connected via Telegram profile');
       setTimeout(() => {

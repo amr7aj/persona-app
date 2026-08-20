@@ -1,4 +1,5 @@
 import 'dotenv/config';
+import { randomUUID } from 'crypto';
 import express from 'express';
 import path from 'path';
 import { createServer as createViteServer } from 'vite';
@@ -18,10 +19,39 @@ import { QUESTIONS, getAssessmentQuestions, AssessmentMode } from './src/data/qu
 import { ARCHETYPES } from './src/data/archetypesData';
 import { StoredAnalysisResult } from './server/types';
 import { PersonalGoal } from './src/types';
+import { getAuthenticatedUser } from './server/supabase';
 
 async function startServer() {
   const app = express();
-  const PORT = 3000;
+  const PORT = Number(process.env.PORT || 3000);
+
+  const configuredOrigins = [
+    process.env.APP_URL,
+    process.env.CORS_ORIGIN,
+    `http://localhost:${PORT}`,
+    `http://127.0.0.1:${PORT}`,
+  ]
+    .filter(Boolean)
+    .map((origin) => String(origin).replace(/\/$/, ''));
+
+  app.use((req, res, next) => {
+    const origin = req.headers.origin;
+    if (origin && configuredOrigins.includes(origin)) {
+      res.header('Access-Control-Allow-Origin', origin);
+      res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+      res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
+      res.header('Vary', 'Origin');
+    }
+
+    if (req.method === 'OPTIONS') {
+      if (origin && !configuredOrigins.includes(origin)) {
+        return res.sendStatus(403);
+      }
+      return res.sendStatus(204);
+    }
+
+    next();
+  });
 
   app.use(express.json({ limit: '10mb' }));
 
@@ -37,7 +67,7 @@ async function startServer() {
   // ==========================================
   // 1. HEALTH & METADATA
   // ==========================================
-  app.get('/api/health', (req, res) => {
+  app.get('/api/health', async (req, res) => {
     sendSuccess(res, {
       status: 'online',
       service: 'PERSONA AI Intelligence Platform',
@@ -49,50 +79,51 @@ async function startServer() {
   // ==========================================
   // 2. AUTHENTICATION & TELEGRAM / EMAIL / PASSWORD
   // ==========================================
-  app.post('/api/auth/register', (req, res) => {
+  app.post('/api/auth/register', async (req, res) => {
     try {
       const { email, password, firstName, lastName, username, language } = req.body;
-      if (!firstName || !firstName.trim()) {
-        return sendError(res, 'الاسم الأول مطلوب (First name is required)', 400);
-      }
-
-      const user = Db.registerUser({
-        email,
-        password,
-        firstName,
-        lastName,
-        username,
-        language: language || 'ar'
-      });
-
-      return sendSuccess(res, { user, token: `tok_${user.id}` }, 'Account created successfully');
+      if (!firstName || !String(firstName).trim()) return sendError(res, 'الاسم الأول مطلوب (First name is required)', 400);
+      const result = await Db.registerUser({ email, password, firstName, lastName, username, language: language || 'ar' });
+      const login = await Db.loginUser(email, password);
+      if (!login) return sendError(res, 'Account created but session could not be created', 500);
+      return sendSuccess(res, { user: result, token: login.accessToken, refreshToken: login.refreshToken }, 'Account created successfully');
     } catch (err: any) {
       console.error('[API Register Error]:', err);
       return sendError(res, err.message || 'Registration failed', 400);
     }
   });
 
-  app.post('/api/auth/login', (req, res) => {
+  app.post('/api/auth/login', async (req, res) => {
     try {
       const { identifier, password } = req.body;
-      if (!identifier || !identifier.trim()) {
-        return sendError(res, 'يرجى إدخال اسم المستخدم، البريد، أو المعرف', 400);
-      }
-
-      const user = Db.loginUser(identifier, password);
-      if (!user) {
-        return sendError(res, 'بيانات الدخول غير صحيحة، أو الحساب غير مسجل', 401);
-      }
-
-      return sendSuccess(res, { user, token: `tok_${user.id}` }, 'Logged in successfully');
+      if (!identifier || !String(identifier).trim() || !password) return sendError(res, 'يرجى إدخال البريد/اسم المستخدم وكلمة المرور', 400);
+      const result = await Db.loginUser(identifier, password);
+      if (!result) return sendError(res, 'بيانات الدخول غير صحيحة، أو الحساب غير مسجل', 401);
+      return sendSuccess(res, { user: result.user, token: result.accessToken, refreshToken: result.refreshToken }, 'Logged in successfully');
     } catch (err: any) {
       console.error('[API Login Error]:', err);
       return sendError(res, 'Login failed', 500);
     }
   });
 
-  app.get('/api/auth/demo-accounts', (req, res) => {
-    const stats = Db.getAdminStats();
+  app.post('/api/auth/refresh', async (req, res) => {
+    try {
+      const { refreshToken } = req.body;
+      if (!refreshToken) return sendError(res, 'Refresh token is required', 400);
+      const { getSupabaseAuth } = await import('./server/supabase');
+      const { data, error } = await getSupabaseAuth().auth.refreshSession({ refresh_token: refreshToken });
+      if (error || !data.session || !data.user) return sendError(res, 'Session expired', 401);
+      const user = await Db.getUser(data.user.id);
+      if (!user) return sendError(res, 'User not found', 404);
+      return sendSuccess(res, { user, token: data.session.access_token, refreshToken: data.session.refresh_token }, 'Session refreshed');
+    } catch (err: any) {
+      return sendError(res, 'Failed to refresh session', 401, err.message);
+    }
+  });
+
+  app.get('/api/auth/demo-accounts', async (req, res) => {
+    if (!(await requireAdmin(req, res))) return;
+    const stats = await Db.getAdminStats();
     const accounts = stats.users.map((u: any) => ({
       id: u.id,
       name: `${u.firstName} ${u.lastName || ''}`.trim(),
@@ -105,62 +136,162 @@ async function startServer() {
     return sendSuccess(res, accounts);
   });
 
-  app.post('/api/auth/telegram', (req, res) => {
+  app.post('/api/auth/telegram', async (req, res) => {
     try {
-      const { initData, user } = req.body;
-      const effectiveUser = user || {
-        id: 99843319,
-        first_name: 'Amr',
-        last_name: 'K.',
-        username: 'amr_persona',
-        language_code: 'ar',
-        photo_url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80'
-      };
-
-      const serverUser = Db.getOrCreateUser(effectiveUser);
-      Db.logAudit('USER_AUTH', serverUser.id, `Authenticated via Telegram WebApp (${serverUser.username || serverUser.id})`);
-
-      return sendSuccess(res, { user: serverUser, token: `tok_${serverUser.id}` });
+      const { initData } = req.body;
+      if (!initData) return sendError(res, 'Telegram initData is required', 400);
+      const botToken = process.env.TELEGRAM_BOT_TOKEN;
+      if (!botToken) return sendError(res, 'Telegram authentication is not configured on the server', 503);
+      const crypto = await import('crypto');
+      const params = new URLSearchParams(initData);
+      const receivedHash = params.get('hash');
+      if (!receivedHash) return sendError(res, 'Invalid Telegram initData', 401);
+      params.delete('hash');
+      const dataCheckString = [...params.entries()].sort(([a],[b]) => a.localeCompare(b)).map(([k,v]) => `${k}=${v}`).join('\n');
+      const secretKey = crypto.createHmac('sha256', 'WebAppData').update(botToken).digest();
+      const expectedHash = crypto.createHmac('sha256', secretKey).update(dataCheckString).digest('hex');
+      const receivedHashBuffer = Buffer.from(receivedHash, 'hex');
+      const expectedHashBuffer = Buffer.from(expectedHash, 'hex');
+      if (
+        receivedHashBuffer.length !== expectedHashBuffer.length ||
+        !crypto.timingSafeEqual(receivedHashBuffer, expectedHashBuffer)
+      ) {
+        return sendError(res, 'Invalid Telegram signature', 401);
+      }
+      const authDate = Number(params.get('auth_date') || 0);
+      const nowSeconds = Math.floor(Date.now() / 1000);
+      if (
+        !Number.isFinite(authDate) ||
+        authDate <= 0 ||
+        authDate > nowSeconds + 60 ||
+        nowSeconds - authDate > 86400
+      ) {
+        return sendError(res, 'Telegram initData expired', 401);
+      }
+      const rawUser = params.get('user');
+      if (!rawUser) return sendError(res, 'Telegram user data missing', 401);
+      const telegramUser = JSON.parse(rawUser);
+      const session = await Db.getOrCreateUser(telegramUser);
+      await Db.logAudit('USER_AUTH', session.user.id, `Authenticated via verified Telegram WebApp (${session.user.username || session.user.id})`);
+      return sendSuccess(res, { user: session.user, token: session.accessToken, refreshToken: session.refreshToken, telegramUserId: telegramUser.id });
     } catch (err: any) {
-      console.error('[API Auth] Error:', err);
+      console.error('[API Telegram Auth] Error:', err);
       return sendError(res, 'Authentication failed', 500, err.message);
     }
   });
 
+  // All API data endpoints require a real Supabase JWT. Health, auth and public questions remain open.
+  app.use('/api', async (req, res, next) => {
+    if (
+      req.path === '/health' ||
+      req.path === '/auth/register' ||
+      req.path === '/auth/login' ||
+      req.path === '/auth/refresh' ||
+      req.path === '/auth/telegram' ||
+      req.path === '/questions' ||
+      req.path === '/telegram/webhook'
+    ) {
+      return next();
+    }
+
+    const header = req.headers.authorization || '';
+    const token = header.startsWith('Bearer ') ? header.slice(7).trim() : '';
+    const authUser = await getAuthenticatedUser(token);
+    if (!authUser) return sendError(res, 'Unauthorized', 401);
+
+    (req as any).authUserId = authUser.id;
+
+    const body = (req.body || {}) as any;
+    const params = req.params as Record<string, string>;
+
+    let requestedUserId =
+      body.userId ||
+      body.newUserId ||
+      body.targetUserId ||
+      params.userId ||
+      params.targetUserId;
+
+    const ownUserPathPrefixes = [
+      '/user/profile/',
+      '/user/growth/',
+      '/reports/user/',
+      '/referrals/',
+      '/notifications/',
+      '/goals/',
+      '/challenges/active/',
+      '/challenges/history/',
+      '/bot/history/',
+    ];
+
+    const ownPathPrefix = ownUserPathPrefixes.find((prefix) =>
+      req.path.startsWith(prefix)
+    );
+
+    if (ownPathPrefix && !requestedUserId) {
+      const suffix = req.path.slice(ownPathPrefix.length).split('/')[0];
+      if (suffix) requestedUserId = suffix;
+    }
+
+    if (requestedUserId && requestedUserId !== authUser.id) {
+      const actor = await Db.getUser(authUser.id);
+      const isAdmin =
+        actor && (actor.role === 'admin' || actor.role === 'super_admin');
+      if (!isAdmin) return sendError(res, 'Forbidden', 403);
+    }
+
+    return next();
+  });
+
+  const requireAdmin = async (req: express.Request, res: express.Response) => {
+    const authUserId = (req as any).authUserId as string | undefined;
+    if (!authUserId) {
+      sendError(res, 'Unauthorized', 401);
+      return false;
+    }
+
+    const actor = await Db.getUser(authUserId);
+    if (!actor || !['admin', 'super_admin'].includes(actor.role)) {
+      sendError(res, 'Forbidden', 403);
+      return false;
+    }
+
+    return true;
+  };
+
   // ==========================================
   // 3. USER PROFILE & ONBOARDING
   // ==========================================
-  app.get('/api/user/profile/:userId', (req, res) => {
-    const user = Db.getUser(req.params.userId);
+  app.get('/api/user/profile/:userId', async (req, res) => {
+    const user = await Db.getUser(req.params.userId);
     if (!user) return sendError(res, 'User not found', 404);
     return sendSuccess(res, user);
   });
 
-  app.post('/api/user/update', (req, res) => {
+  app.post('/api/user/update', async (req, res) => {
     const { userId, updates } = req.body;
     if (!userId) return sendError(res, 'Missing userId', 400);
 
-    const updated = Db.updateUser(userId, updates);
+    const updated = await Db.updateUser(userId, updates);
     if (!updated) return sendError(res, 'User not found', 404);
     return sendSuccess(res, updated, 'Profile updated successfully');
   });
 
-  app.post('/api/user/onboarding', (req, res) => {
+  app.post('/api/user/onboarding', async (req, res) => {
     const { userId, onboardingData } = req.body;
     if (!userId) return sendError(res, 'Missing userId', 400);
 
-    const updated = Db.updateUser(userId, {
+    const updated = await Db.updateUser(userId, {
       onboardingCompleted: true,
       onboardingData
     });
-    Db.addXp(userId, 50, 'onboarded');
+    await Db.addXp(userId, 50, 'onboarded');
     return sendSuccess(res, updated, 'Onboarding saved');
   });
 
   // ==========================================
   // 4. QUESTIONS & DYNAMIC ASSESSMENT ENGINE
   // ==========================================
-  app.get('/api/questions', (req, res) => {
+  app.get('/api/questions', async (req, res) => {
     const { mode, category, randomize } = req.query;
     const shouldRandomize = randomize !== 'false';
     const questions = getAssessmentQuestions(
@@ -184,7 +315,7 @@ async function startServer() {
         return sendError(res, 'Invalid submission payload. userId and answers array required.', 400);
       }
 
-      const user = Db.getUser(userId);
+      const user = await Db.getUser(userId);
       const userName = user ? `${user.firstName}` : 'Explorer';
 
       // Step 1: Algorithmic multidimensional vector calculation
@@ -210,8 +341,8 @@ async function startServer() {
       };
 
       // Step 4: Persist in database
-      const saved = Db.saveAnalysisResult(resultRecord);
-      Db.logAudit('ASSESSMENT_COMPLETED', userId, `Completed assessment. Archetype: ${calculated.archetypeId} (Score: ${calculated.overallScore})`);
+      const saved = await Db.saveAnalysisResult(resultRecord);
+      await Db.logAudit('ASSESSMENT_COMPLETED', userId, `Completed assessment. Archetype: ${calculated.archetypeId} (Score: ${calculated.overallScore})`);
 
       return sendSuccess(res, {
         report: {
@@ -228,17 +359,29 @@ async function startServer() {
   // ==========================================
   // 5. REPORTS & HISTORY
   // ==========================================
-  app.get('/api/reports/:id', (req, res) => {
-    const result = Db.getAnalysisResult(req.params.id);
+  app.get('/api/reports/:id', async (req, res) => {
+    const result = await Db.getAnalysisResult(req.params.id);
     if (!result) return sendError(res, 'Report not found', 404);
+
+    const authUserId = (req as any).authUserId as string | undefined;
+    if (!authUserId) return sendError(res, 'Unauthorized', 401);
+
+    if (result.userId !== authUserId) {
+      const actor = await Db.getUser(authUserId);
+      const isAdmin =
+        actor && (actor.role === 'admin' || actor.role === 'super_admin');
+
+      if (!isAdmin) return sendError(res, 'Forbidden', 403);
+    }
+
     return sendSuccess(res, {
       ...result,
       archetype: ARCHETYPES[result.archetypeId]
     });
   });
 
-  app.get('/api/reports/user/:userId', (req, res) => {
-    const list = Db.getUserAnalysisHistory(req.params.userId);
+  app.get('/api/reports/user/:userId', async (req, res) => {
+    const list = await Db.getUserAnalysisHistory(req.params.userId);
     const enriched = list.map((item) => ({
       ...item,
       archetype: ARCHETYPES[item.archetypeId]
@@ -246,29 +389,29 @@ async function startServer() {
     return sendSuccess(res, enriched);
   });
 
-  app.get('/api/user/growth/:userId', (req, res) => {
-    const growth = Db.getGrowthHistory(req.params.userId);
+  app.get('/api/user/growth/:userId', async (req, res) => {
+    const growth = await Db.getGrowthHistory(req.params.userId);
     return sendSuccess(res, growth);
   });
 
   // ==========================================
   // 6. SUBSCRIPTIONS & PREMIUM
   // ==========================================
-  app.post('/api/subscription/upgrade', (req, res) => {
+  app.post('/api/subscription/upgrade', async (req, res) => {
     const { userId, tier } = req.body;
     if (!userId) return sendError(res, 'Missing userId', 400);
 
-    const user = Db.getUser(userId);
+    const user = await Db.getUser(userId);
     if (!user) return sendError(res, 'User not found', 404);
 
-    const updated = Db.updateUser(userId, { role: 'premium' });
-    Db.addXp(userId, 200, 'premium_member');
-    Db.addNotification(userId, {
+    const updated = await Db.updateUser(userId, { role: 'premium' });
+    await Db.addXp(userId, 200, 'premium_member');
+    await Db.addNotification(userId, {
       title: 'تم تفعيل العضوية المميزة PERSONA Premium 💎',
       message: 'تم فتح جميع التحليلات العميقة، بما فيها تقارير العلاقات والحميمية والتوصيات المتقدمة.',
       type: 'badge_unlocked'
     });
-    Db.logAudit('PREMIUM_UPGRADE', userId, `Upgraded to tier: ${tier || 'premium'}`);
+    await Db.logAudit('PREMIUM_UPGRADE', userId, `Upgraded to tier: ${tier || 'premium'}`);
 
     return sendSuccess(res, updated, 'Upgraded to Premium successfully');
   });
@@ -276,10 +419,10 @@ async function startServer() {
   // ==========================================
   // 7. REFERRALS & GAMIFICATION
   // ==========================================
-  app.get('/api/referrals/:userId', (req, res) => {
-    const user = Db.getUser(req.params.userId);
+  app.get('/api/referrals/:userId', async (req, res) => {
+    const user = await Db.getUser(req.params.userId);
     if (!user) return sendError(res, 'User not found', 404);
-    const records = Db.getReferrals(req.params.userId);
+    const records = await Db.getReferrals(req.params.userId);
     return sendSuccess(res, {
       referralCode: user.referralCode,
       referralCount: user.referralCount || 0,
@@ -288,11 +431,11 @@ async function startServer() {
     });
   });
 
-  app.post('/api/referrals/apply', (req, res) => {
+  app.post('/api/referrals/apply', async (req, res) => {
     const { referralCode, newUserId, newUserName } = req.body;
     if (!referralCode || !newUserId) return sendError(res, 'Missing referralCode or newUserId', 400);
 
-    const success = Db.applyReferral(referralCode, newUserId, newUserName || 'Friend');
+    const success = await Db.applyReferral(referralCode, newUserId, newUserName || 'Friend');
     if (!success) {
       return sendError(res, 'Invalid referral code or self-referral attempt', 400);
     }
@@ -302,20 +445,20 @@ async function startServer() {
   // ==========================================
   // 8. NOTIFICATIONS & GOALS TRACKER
   // ==========================================
-  app.get('/api/notifications/:userId', (req, res) => {
-    const list = Db.getUserNotifications(req.params.userId);
+  app.get('/api/notifications/:userId', async (req, res) => {
+    const list = await Db.getUserNotifications(req.params.userId);
     return sendSuccess(res, list);
   });
 
-  app.post('/api/notifications/read', (req, res) => {
+  app.post('/api/notifications/read', async (req, res) => {
     const { notifId } = req.body;
-    Db.markNotificationRead(notifId);
+    await Db.markNotificationRead(notifId, (req as any).authUserId);
     return sendSuccess(res, { read: true });
   });
 
   // Goals API
-  app.get('/api/goals/:userId', (req, res) => {
-    const goals = Db.getUserGoals(req.params.userId);
+  app.get('/api/goals/:userId', async (req, res) => {
+    const goals = await Db.getUserGoals(req.params.userId);
     return sendSuccess(res, goals);
   });
 
@@ -326,8 +469,8 @@ async function startServer() {
         return sendError(res, 'userId and title are required', 400);
       }
 
-      const user = Db.getUser(userId);
-      const reports = Db.getUserAnalysisHistory(userId);
+      const user = await Db.getUser(userId);
+      const reports = await Db.getUserAnalysisHistory(userId);
       const latest = reports[0];
 
       const userContext = {
@@ -340,8 +483,7 @@ async function startServer() {
       // Generate customized psychological check-in prompt from Gemini AI
       const aiPrompt = await generateGoalAICheckInPrompt(title.trim(), category || 'habits', userContext);
 
-      const goalId = 'goal_' + Date.now() + '_' + Math.random().toString(36).substring(2, 5);
-      const newGoal: PersonalGoal = {
+      const goalId = randomUUID();      const newGoal: PersonalGoal = {
         id: goalId,
         userId,
         title: title.trim(),
@@ -355,8 +497,8 @@ async function startServer() {
         aiCheckInPrompt: aiPrompt
       };
 
-      const saved = Db.saveGoal(newGoal);
-      Db.logAudit('GOAL_CREATED', userId, `Created goal: "${newGoal.title}" (${newGoal.category})`);
+      const saved = await Db.saveGoal(newGoal);
+      await Db.logAudit('GOAL_CREATED', userId, `Created goal: "${newGoal.title}" (${newGoal.category})`);
 
       return sendSuccess(res, saved, 'Goal created successfully');
     } catch (err: any) {
@@ -372,10 +514,10 @@ async function startServer() {
         return sendError(res, 'userId, goalId, and status are required', 400);
       }
 
-      const user = Db.getUser(userId);
-      const reports = Db.getUserAnalysisHistory(userId);
+      const user = await Db.getUser(userId);
+      const reports = await Db.getUserAnalysisHistory(userId);
       const latest = reports[0];
-      const userGoals = Db.getUserGoals(userId);
+      const userGoals = await Db.getUserGoals(userId);
       const targetGoal = userGoals.find((g) => g.id === goalId);
 
       const userContext = {
@@ -391,7 +533,7 @@ async function startServer() {
         userContext
       );
 
-      const result = Db.recordGoalCheckIn(userId, goalId, {
+      const result = await Db.recordGoalCheckIn(userId, goalId, {
         status,
         note,
         aiFeedback
@@ -401,7 +543,7 @@ async function startServer() {
         return sendError(res, 'Goal not found', 404);
       }
 
-      Db.logAudit('GOAL_CHECKIN', userId, `Checked in on goal: "${result.goal.title}" (${status})`);
+      await Db.logAudit('GOAL_CHECKIN', userId, `Checked in on goal: "${result.goal.title}" (${status})`);
       return sendSuccess(res, result, 'Check-in recorded successfully');
     } catch (err: any) {
       console.error('[API Goal Check-in Error]:', err);
@@ -409,23 +551,23 @@ async function startServer() {
     }
   });
 
-  app.delete('/api/goals/:userId/:goalId', (req, res) => {
+  app.delete('/api/goals/:userId/:goalId', async (req, res) => {
     const { userId, goalId } = req.params;
-    const deleted = Db.deleteGoal(userId, goalId);
+    const deleted = await Db.deleteGoal(userId, goalId);
     if (!deleted) return sendError(res, 'Goal not found', 404);
-    Db.logAudit('GOAL_DELETED', userId, `Deleted goal ID: ${goalId}`);
+    await Db.logAudit('GOAL_DELETED', userId, `Deleted goal ID: ${goalId}`);
     return sendSuccess(res, { deleted: true }, 'Goal deleted successfully');
   });
 
   app.post('/api/goals/refresh-ai-prompt', async (req, res) => {
     try {
       const { userId, goalId } = req.body;
-      const userGoals = Db.getUserGoals(userId);
+      const userGoals = await Db.getUserGoals(userId);
       const goal = userGoals.find((g) => g.id === goalId);
       if (!goal) return sendError(res, 'Goal not found', 404);
 
-      const user = Db.getUser(userId);
-      const reports = Db.getUserAnalysisHistory(userId);
+      const user = await Db.getUser(userId);
+      const reports = await Db.getUserAnalysisHistory(userId);
       const latest = reports[0];
 
       const userContext = {
@@ -436,7 +578,7 @@ async function startServer() {
       };
 
       const newPrompt = await generateGoalAICheckInPrompt(goal.title, goal.category, userContext);
-      const updated = Db.updateGoal(userId, goalId, { aiCheckInPrompt: newPrompt });
+      const updated = await Db.updateGoal(userId, goalId, { aiCheckInPrompt: newPrompt });
 
       return sendSuccess(res, updated, 'Prompt refreshed successfully');
     } catch (err: any) {
@@ -451,17 +593,17 @@ async function startServer() {
   app.get('/api/challenges/active/:userId', async (req, res) => {
     try {
       const { userId } = req.params;
-      const user = Db.getUser(userId);
+      const user = await Db.getUser(userId);
       if (!user) return sendError(res, 'User not found', 404);
 
       // Check if user already has an active challenge
-      let active = Db.getActiveChallenge(userId);
+      let active = await Db.getActiveChallenge(userId);
       if (active) {
         return sendSuccess(res, active);
       }
 
       // If no active challenge, find weakest dimension from user's latest report
-      const history = Db.getUserAnalysisHistory(userId);
+      const history = await Db.getUserAnalysisHistory(userId);
       const latest = history[0];
 
       let weakest = {
@@ -491,7 +633,7 @@ async function startServer() {
       };
 
       const newChallenge = await generate24HourGrowthChallenge(userContext, weakest);
-      Db.saveChallenge(userId, newChallenge);
+      await Db.saveChallenge(userId, newChallenge);
 
       return sendSuccess(res, newChallenge);
     } catch (err: any) {
@@ -505,10 +647,10 @@ async function startServer() {
       const { userId } = req.body;
       if (!userId) return sendError(res, 'User ID is required', 400);
 
-      const user = Db.getUser(userId);
+      const user = await Db.getUser(userId);
       if (!user) return sendError(res, 'User not found', 404);
 
-      const history = Db.getUserAnalysisHistory(userId);
+      const history = await Db.getUserAnalysisHistory(userId);
       const latest = history[0];
 
       let weakest = {
@@ -538,7 +680,7 @@ async function startServer() {
       };
 
       const newChallenge = await generate24HourGrowthChallenge(userContext, weakest);
-      Db.saveChallenge(userId, newChallenge);
+      await Db.saveChallenge(userId, newChallenge);
 
       return sendSuccess(res, newChallenge, 'Challenge rerolled successfully');
     } catch (err: any) {
@@ -554,14 +696,14 @@ async function startServer() {
         return sendError(res, 'userId and challengeId are required', 400);
       }
 
-      const user = Db.getUser(userId);
+      const user = await Db.getUser(userId);
       if (!user) return sendError(res, 'User not found', 404);
 
-      const userChallenges = Db.getUserChallenges(userId);
+      const userChallenges = await Db.getUserChallenges(userId);
       const challenge = userChallenges.find((c) => c.id === challengeId);
       if (!challenge) return sendError(res, 'Challenge not found', 404);
 
-      const history = Db.getUserAnalysisHistory(userId);
+      const history = await Db.getUserAnalysisHistory(userId);
       const latest = history[0];
 
       const userContext = {
@@ -572,11 +714,11 @@ async function startServer() {
       // Generate psychological evaluation & feedback
       const aiFeedback = await evaluateGrowthChallengeCompletion(userContext, challenge, reflectionNote || '');
 
-      const result = Db.completeChallenge(userId, challengeId, reflectionNote, aiFeedback);
+      const result = await Db.completeChallenge(userId, challengeId, reflectionNote, aiFeedback);
       if (!result) return sendError(res, 'Failed to complete challenge', 500);
 
       // Create notification
-      Db.addNotification(userId, {
+      await Db.addNotification(userId, {
         title: 'تحدي النمو مكتمل! 🎯',
         message: `أحسنت يا ${user.firstName}! أتممت بنجاح "${challenge.titleAr}" وحصلت على +${result.xpEarned} XP!`,
         type: 'badge_unlocked'
@@ -593,10 +735,10 @@ async function startServer() {
     }
   });
 
-  app.get('/api/challenges/history/:userId', (req, res) => {
+  app.get('/api/challenges/history/:userId', async (req, res) => {
     try {
       const { userId } = req.params;
-      const list = Db.getUserChallenges(userId);
+      const list = await Db.getUserChallenges(userId);
       return sendSuccess(res, list);
     } catch (err: any) {
       console.error('[API Challenge History Error]:', err);
@@ -607,10 +749,10 @@ async function startServer() {
   // ==========================================
   // 10. TELEGRAM BOT SIMULATION & LIVE AI COACH CHAT
   // ==========================================
-  app.post('/api/bot/command', (req, res) => {
+  app.post('/api/bot/command', async (req, res) => {
     const { command, user } = req.body;
     const appUrl = process.env.APP_URL || `${req.protocol}://${req.get('host')}`;
-    const botResponse = handleBotCommand(
+    const botResponse = await handleBotCommand(
       command || '/start',
       user || { id: 99843319, first_name: 'Amr', username: 'amr_persona' },
       appUrl
@@ -625,8 +767,8 @@ async function startServer() {
         return sendError(res, 'Message is required', 400);
       }
 
-      const user = userId ? Db.getUser(userId) : null;
-      const latestReports = userId ? Db.getUserAnalysisHistory(userId) : [];
+      const user = userId ? await Db.getUser(userId) : null;
+      const latestReports = userId ? await Db.getUserAnalysisHistory(userId) : [];
       const latest = latestReports[0];
 
       const effectiveContext = {
@@ -644,14 +786,14 @@ async function startServer() {
 
       // Persist in DB history if user exists
       if (userId) {
-        Db.saveChatMessage({
+        await Db.saveChatMessage({
           id: 'msg_' + Date.now(),
           userId,
           role: 'user',
           text: message,
           timestamp: new Date().toISOString()
         });
-        Db.saveChatMessage({
+        await Db.saveChatMessage({
           id: 'msg_bot_' + Date.now(),
           userId,
           role: 'model',
@@ -668,13 +810,13 @@ async function startServer() {
     }
   });
 
-  app.get('/api/bot/history/:userId', (req, res) => {
-    const history = Db.getChatHistory(req.params.userId);
+  app.get('/api/bot/history/:userId', async (req, res) => {
+    const history = await Db.getChatHistory(req.params.userId);
     return sendSuccess(res, history);
   });
 
   // Webhook for real Telegram Bot if configured
-  app.post('/api/telegram/webhook', (req, res) => {
+  app.post('/api/telegram/webhook', async (req, res) => {
     const update = req.body;
     console.log('[Telegram Webhook] Received update:', JSON.stringify(update));
     res.sendStatus(200);
@@ -683,34 +825,37 @@ async function startServer() {
   // ==========================================
   // 10. ADMIN DASHBOARD & TELEMETRY
   // ==========================================
-  app.get('/api/admin/stats', (req, res) => {
-    const stats = Db.getAdminStats();
+  app.get('/api/admin/stats', async (req, res) => {
+    if (!(await requireAdmin(req, res))) return;
+    const stats = await Db.getAdminStats();
     return sendSuccess(res, stats);
   });
 
-  app.post('/api/admin/role', (req, res) => {
+  app.post('/api/admin/role', async (req, res) => {
+    if (!(await requireAdmin(req, res))) return;
     const { adminSecret, targetUserId, newRole } = req.body;
-    if (adminSecret !== (process.env.ADMIN_SECRET || 'persona_admin_secret_2026')) {
+    if (!process.env.ADMIN_SECRET || adminSecret !== process.env.ADMIN_SECRET) {
       return sendError(res, 'Unauthorized admin action. Invalid secret.', 403);
     }
-    const updated = Db.updateUser(targetUserId, { role: newRole });
-    Db.logAudit('ADMIN_ROLE_CHANGE', targetUserId, `Role updated to ${newRole}`);
+    const updated = await Db.updateUser(targetUserId, { role: newRole });
+    await Db.logAudit('ADMIN_ROLE_CHANGE', targetUserId, `Role updated to ${newRole}`);
     return sendSuccess(res, updated, 'Role updated');
   });
 
-  app.post('/api/admin/broadcast', (req, res) => {
+  app.post('/api/admin/broadcast', async (req, res) => {
+    if (!(await requireAdmin(req, res))) return;
     const { title, message } = req.body;
-    const stats = Db.getAdminStats();
+    const stats = await Db.getAdminStats();
     let sentCount = 0;
     for (const u of stats.users) {
-      Db.addNotification(u.id, {
+      await Db.addNotification(u.id, {
         title: title || 'إعلان من فريق PERSONA',
         message: message || 'تحديثات جديدة متاحة في المنصة.',
         type: 'system'
       });
       sentCount++;
     }
-    Db.logAudit('ADMIN_BROADCAST', 'admin', `Broadcast sent to ${sentCount} users`);
+    await Db.logAudit('ADMIN_BROADCAST', 'admin', `Broadcast sent to ${sentCount} users`);
     return sendSuccess(res, { sentCount }, 'Broadcast sent successfully');
   });
 
@@ -726,7 +871,7 @@ async function startServer() {
   } else {
     const distPath = path.join(process.cwd(), 'dist');
     app.use(express.static(distPath));
-    app.get('*', (req, res) => {
+    app.get('*', async (req, res) => {
       res.sendFile(path.join(distPath, 'index.html'));
     });
   }
