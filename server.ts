@@ -1,4 +1,5 @@
 import "dotenv/config";
+import cors from "cors";
 import { randomUUID } from "crypto";
 import express from "express";
 import path from "path";
@@ -24,11 +25,11 @@ import { ARCHETYPES } from "./src/data/archetypesData";
 import { StoredAnalysisResult } from "./server/types";
 import { PersonalGoal } from "./src/types";
 import { getAuthenticatedUser } from "./server/supabase";
-
 async function startServer() {
   const app = express();
-  const PORT = Number(process.env.PORT || 3000);
 
+
+  const PORT = Number(process.env.PORT || 3000);
   // =========================================================
   // CORS
   // Supports:
@@ -46,6 +47,8 @@ async function startServer() {
     `http://127.0.0.1:${PORT}`,
     "http://localhost",
     "https://localhost",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
 
     // Capacitor
     "capacitor://localhost",
@@ -183,9 +186,10 @@ async function startServer() {
 
   app.post("/api/auth/login", async (req, res) => {
     try {
-      const { identifier, password } = req.body;
+      const { identifier, email, password } = req.body;
 
-      if (!identifier || !String(identifier).trim() || !password) {
+      const loginIdentifier = identifier || email;
+      if (!loginIdentifier || !String(loginIdentifier).trim() || !password) {
         return sendError(
           res,
           "يرجى إدخال البريد/اسم المستخدم وكلمة المرور",
@@ -193,8 +197,7 @@ async function startServer() {
         );
       }
 
-      const result = await Db.loginUser(identifier, password);
-
+      const result = await Db.loginUser(loginIdentifier, password);
       if (!result) {
         return sendError(
           res,

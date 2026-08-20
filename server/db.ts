@@ -1,9 +1,6 @@
 import { randomUUID } from "crypto";
-import {
-  getSupabaseAdmin,
-  getSupabaseAuth,
-  getSupabaseAuthAdmin,
-} from "./supabase";
+import { getSupabaseAdmin, getSupabaseAuth } from "./supabase";
+
 import {
   ServerUser,
   StoredAnalysisResult,
@@ -24,6 +21,8 @@ const s = () => getSupabaseAdmin();
 
 const now = () => new Date().toISOString();
 
+const today = () => new Date().toISOString().slice(0, 10);
+
 const clean = (value: unknown): string =>
   typeof value === "string" ? value.trim() : "";
 
@@ -33,17 +32,10 @@ function isUuid(value: string): boolean {
   );
 }
 
-/**
- * custom_settings is the only JSON storage available on users.
- *
- * We keep application-only data here:
- * {
- *   onboardingData: {...},
- *   userSettings: {...}
- * }
- */
 function getCustomSettings(row: any): Record<string, any> {
-  if (!row?.custom_settings) return {};
+  if (!row?.custom_settings) {
+    return {};
+  }
 
   if (
     typeof row.custom_settings === "object" &&
@@ -57,25 +49,23 @@ function getCustomSettings(row: any): Record<string, any> {
 
 function getOnboardingData(row: any): Record<string, any> | undefined {
   const settings = getCustomSettings(row);
+
   return settings.onboardingData || undefined;
 }
 
 function getUserSettings(row: any): Record<string, any> | undefined {
   const settings = getCustomSettings(row);
+
   return settings.userSettings || undefined;
 }
 
-/**
- * Maps the real Supabase users table to ServerUser.
- *
- * IMPORTANT:
- * users.last_login does not exist in your schema.
- * We therefore use updated_at as the server-side last activity/login timestamp.
- *
- * accountCode and referralCount are not real DB columns.
- * accountCode is mapped from referral_code.
- * referralCount is calculated from referrals.
- */
+function createReferralCode(): string {
+  return `PERSONA-${Math.random()
+    .toString(36)
+    .slice(2, 6)
+    .toUpperCase()}${Math.floor(10 + Math.random() * 90)}`;
+}
+
 function mapUser(row: any, referralCount = 0): ServerUser {
   const customSettings = getCustomSettings(row);
 
@@ -125,34 +115,39 @@ function mapUser(row: any, referralCount = 0): ServerUser {
 async function getReferralCount(userId: string): Promise<number> {
   const { count, error } = await s()
     .from("referrals")
-    .select("id", { count: "exact", head: true })
+    .select("id", {
+      count: "exact",
+      head: true,
+    })
     .eq("referrer_id", userId);
 
-  if (error) return 0;
+  if (error) {
+    return 0;
+  }
 
   return count || 0;
 }
 
 async function getUserRow(userId: string): Promise<any | null> {
+  if (!userId) {
+    return null;
+  }
+
   const { data, error } = await s()
     .from("users")
     .select("*")
     .eq("id", userId)
     .maybeSingle();
 
-  if (error || !data) return null;
+  if (error || !data) {
+    return null;
+  }
 
   return data;
 }
 
 export const Db = {
-  /**
-   * Initialize DB connection.
-   *
-   * Supabase is the ONLY persistent database.
-   * No JSON database is created.
-   */
-  async init() {
+  async init(): Promise<void> {
     const { error } = await s().from("users").select("id").limit(1);
 
     if (error) {
@@ -160,26 +155,22 @@ export const Db = {
     }
   },
 
-  /**
-   * Get user by Supabase Auth UUID.
-   */
   async getUser(userId: string): Promise<ServerUser | undefined> {
-    if (!userId) return undefined;
+    if (!userId) {
+      return undefined;
+    }
 
     const row = await getUserRow(userId);
 
-    if (!row) return undefined;
+    if (!row) {
+      return undefined;
+    }
 
     const referralCount = await getReferralCount(userId);
 
     return mapUser(row, referralCount);
   },
 
-  /**
-   * Telegram authentication.
-   *
-   * Telegram users are represented by a real Supabase Auth user.
-   */
   async getOrCreateUser(telegramUser: {
     id: number;
     first_name: string;
@@ -192,35 +183,41 @@ export const Db = {
     accessToken: string;
     refreshToken?: string;
   }> {
+    if (!telegramUser?.id) {
+      throw new Error("Invalid Telegram user");
+    }
+
     let userId: string;
 
-    const existing = await s()
+    const { data: existing, error: existingError } = await s()
       .from("users")
       .select("*")
       .eq("telegram_id", telegramUser.id)
       .maybeSingle();
 
-    if (existing.data) {
-      userId = existing.data.id;
+    if (existingError) {
+      throw existingError;
+    }
 
-      const existingSettings = getCustomSettings(existing.data);
+    if (existing) {
+      userId = existing.id;
+
+      const existingSettings = getCustomSettings(existing);
 
       const { data, error } = await s()
         .from("users")
         .update({
-          first_name:
-            telegramUser.first_name || existing.data.first_name || "User",
+          first_name: telegramUser.first_name || existing.first_name || "User",
 
-          last_name: telegramUser.last_name ?? existing.data.last_name ?? null,
+          last_name: telegramUser.last_name ?? existing.last_name ?? null,
 
-          username: telegramUser.username ?? existing.data.username ?? null,
+          username: telegramUser.username ?? existing.username ?? null,
 
-          avatar_url:
-            telegramUser.photo_url ?? existing.data.avatar_url ?? null,
+          avatar_url: telegramUser.photo_url ?? existing.avatar_url ?? null,
 
           language: telegramUser.language_code?.startsWith("en")
             ? "en"
-            : existing.data.language || "ar",
+            : existing.language || "ar",
 
           updated_at: now(),
 
@@ -241,13 +238,18 @@ export const Db = {
       const { data: authData, error: authError } =
         await s().auth.admin.createUser({
           email: syntheticEmail,
+
           password: temporaryPassword,
+
           email_confirm: true,
 
           user_metadata: {
             telegram_id: telegramUser.id,
+
             first_name: telegramUser.first_name,
+
             last_name: telegramUser.last_name,
+
             username: telegramUser.username,
           },
         });
@@ -258,10 +260,7 @@ export const Db = {
 
       userId = authData.user.id;
 
-      const referralCode = `PERSONA-${Math.random()
-        .toString(36)
-        .slice(2, 6)
-        .toUpperCase()}${Math.floor(10 + Math.random() * 90)}`;
+      const referralCode = createReferralCode();
 
       const { error } = await s()
         .from("users")
@@ -290,7 +289,7 @@ export const Db = {
 
           current_streak: 1,
 
-          last_active_date: new Date().toISOString().slice(0, 10),
+          last_active_date: today(),
 
           onboarding_completed: false,
 
@@ -307,14 +306,11 @@ export const Db = {
 
       if (error) {
         await s().auth.admin.deleteUser(userId);
+
         throw error;
       }
     }
 
-    /**
-     * Generate a temporary password so we can obtain
-     * a REAL Supabase JWT session.
-     */
     const temporaryPassword = `${randomUUID()}A1!`;
 
     const { error: passwordError } = await s().auth.admin.updateUserById(
@@ -328,11 +324,15 @@ export const Db = {
       throw passwordError;
     }
 
-    const { data: emailRow } = await s()
+    const { data: emailRow, error: emailError } = await s()
       .from("users")
       .select("email")
       .eq("id", userId)
       .single();
+
+    if (emailError) {
+      throw emailError;
+    }
 
     const email = emailRow?.email;
 
@@ -343,6 +343,7 @@ export const Db = {
     const { data: sessionData, error: sessionError } =
       await getSupabaseAuth().auth.signInWithPassword({
         email,
+
         password: temporaryPassword,
       });
 
@@ -356,7 +357,8 @@ export const Db = {
       .from("users")
       .update({
         updated_at: now(),
-        last_active_date: new Date().toISOString().slice(0, 10),
+
+        last_active_date: today(),
       })
       .eq("id", userId);
 
@@ -374,26 +376,26 @@ export const Db = {
 
     return {
       user,
+
       accessToken: sessionData.session.access_token,
 
       refreshToken: sessionData.session.refresh_token,
     };
   },
 
-  /**
-   * Update user.
-   *
-   * Only real users columns are written.
-   */
   async updateUser(
     userId: string,
     updates: Partial<ServerUser>
   ): Promise<ServerUser | null> {
-    if (!userId) return null;
+    if (!userId) {
+      return null;
+    }
 
     const existing = await getUserRow(userId);
 
-    if (!existing) return null;
+    if (!existing) {
+      return null;
+    }
 
     const patch: Record<string, any> = {};
 
@@ -445,16 +447,10 @@ export const Db = {
       patch.onboarding_completed = updates.onboardingCompleted;
     }
 
-    /**
-     * ServerUser.lastLogin maps to updated_at
-     */
     if (updates.lastLogin !== undefined) {
       patch.updated_at = updates.lastLogin;
     }
 
-    /**
-     * onboardingData is stored inside custom_settings.
-     */
     if (updates.onboardingData !== undefined) {
       const currentSettings = getCustomSettings(existing);
 
@@ -481,30 +477,32 @@ export const Db = {
     return this.getUser(userId);
   },
 
-  /**
-   * XP system.
-   *
-   * Updates users.xp + users.level
-   * and records every XP operation in xp_logs.
-   */
   async addXp(
     userId: string,
     amount: number,
     badgeAward?: string
   ): Promise<ServerUser | null> {
+    if (!userId || !Number.isFinite(amount)) {
+      return null;
+    }
+
     const user = await this.getUser(userId);
 
-    if (!user) return null;
+    if (!user) {
+      return null;
+    }
 
     const badges = [...(user.badges || [])];
 
-    if (badgeAward && !badges.includes(badgeAward)) {
+    const hadBadge = badgeAward ? badges.includes(badgeAward) : true;
+
+    if (badgeAward && !hadBadge) {
       badges.push(badgeAward);
     }
 
-    const oldXp = user.xp || 0;
+    const oldXp = Number(user.xp || 0);
 
-    const newXp = oldXp + amount;
+    const newXp = Math.max(0, oldXp + amount);
 
     const newLevel = Math.floor(newXp / 150) + 1;
 
@@ -512,8 +510,11 @@ export const Db = {
       .from("users")
       .update({
         xp: newXp,
+
         level: newLevel,
+
         badges,
+
         updated_at: now(),
       })
       .eq("id", userId);
@@ -522,7 +523,7 @@ export const Db = {
       throw error;
     }
 
-    await s()
+    const { error: xpLogError } = await s()
       .from("xp_logs")
       .insert({
         user_id: userId,
@@ -533,37 +534,58 @@ export const Db = {
 
         meta: {
           amount,
+
           oldXp,
+
           newXp,
+
           oldLevel: user.level,
+
           newLevel,
+
           badgeAward: badgeAward || null,
         },
       });
 
-    if (badgeAward && !user.badges.includes(badgeAward)) {
-      await this.addNotification(userId, {
-        title: "وسام جديد مفتوح 🎖️",
+    if (xpLogError) {
+      console.error("[XP LOG]", xpLogError.message);
+    }
 
-        message: `تهانينا! لقد حصلت على وسام جديد: ${badgeAward}`,
+    if (badgeAward && !hadBadge) {
+      try {
+        await this.addNotification(userId, {
+          title: "وسام جديد مفتوح 🎖️",
 
-        type: "badge_unlocked",
-      });
+          message: `تهانينا! لقد حصلت على وسام جديد: ${badgeAward}`,
+
+          type: "badge_unlocked",
+        });
+      } catch (error) {
+        console.error("[BADGE NOTIFICATION]", error);
+      }
     }
 
     return this.getUser(userId);
   },
 
-  /**
-   * Save personality analysis.
-   *
-   * REAL TABLE:
-   * analysis_reports
-   */
   async saveAnalysisResult(
     result: StoredAnalysisResult
   ): Promise<StoredAnalysisResult> {
-    const id = isUuid(result.id) ? result.id : randomUUID();
+    if (!result?.userId) {
+      throw new Error("Analysis userId is required");
+    }
+
+    let id = isUuid(result.id) ? result.id : randomUUID();
+
+    const { data: existing } = await s()
+      .from("analysis_reports")
+      .select("id,user_id")
+      .eq("id", id)
+      .maybeSingle();
+
+    if (existing && existing.user_id !== result.userId) {
+      id = randomUUID();
+    }
 
     const row = {
       id,
@@ -576,18 +598,10 @@ export const Db = {
 
       domain_scores: result.domainScores || {},
 
-      /**
-       * Frontend calls this "dimensions".
-       * DB calls it "scores".
-       */
       scores: result.dimensions || [],
 
       ai_report: result.aiReport || null,
 
-      /**
-       * Not represented in StoredAnalysisResult.
-       * Keep null.
-       */
       archetype_data: null,
 
       answers_snapshot: null,
@@ -605,33 +619,38 @@ export const Db = {
       throw error;
     }
 
-    /**
-     * XP reward for completing analysis.
-     */
-    await this.addXp(result.userId, 150, "completed_profile");
+    if (!existing) {
+      await this.addXp(result.userId, 150, "completed_profile");
 
-    await this.addNotification(result.userId, {
-      title: "تحليل شخصيتك الجديد مكتمل 🧠",
+      try {
+        await this.addNotification(result.userId, {
+          title: "تحليل شخصيتك الجديد مكتمل 🧠",
 
-      message: `تم تحليل إجاباتك بنجاح. نمطك هو: ${result.archetypeId}`,
+          message: `تم تحليل إجاباتك بنجاح. نمطك هو: ${result.archetypeId}`,
 
-      type: "analysis_ready",
+          type: "analysis_ready",
 
-      actionUrl: `/reports/${id}`,
-    });
+          actionUrl: `/reports/${id}`,
+        });
+      } catch (error) {
+        console.error("[ANALYSIS NOTIFICATION]", error);
+      }
+    }
 
     return {
       ...result,
+
       id,
     };
   },
 
-  /**
-   * Get one analysis report.
-   */
   async getAnalysisResult(
     reportId: string
   ): Promise<StoredAnalysisResult | undefined> {
+    if (!reportId) {
+      return undefined;
+    }
+
     const { data, error } = await s()
       .from("analysis_reports")
       .select("*")
@@ -669,9 +688,6 @@ export const Db = {
     };
   },
 
-  /**
-   * Get all analysis reports for user.
-   */
   async getUserAnalysisHistory(
     userId: string
   ): Promise<StoredAnalysisResult[]> {
@@ -706,19 +722,14 @@ export const Db = {
 
       aiReport: r.ai_report || undefined,
 
-      isUnlockedPremium: Boolean(r.ai_report?.isUnlockedPremium ?? false),
+      isUnlockedPremium: Boolean(
+        r.ai_report?.isUnlockedPremium ?? r.is_unlocked_premium ?? false
+      ),
 
       completionTimeSeconds: r.completion_time_seconds || undefined,
     }));
   },
 
-  /**
-   * Growth history.
-   *
-   * There is NO user_progress table in your DB.
-   *
-   * Therefore growth is reconstructed from analysis_reports.
-   */
   async getGrowthHistory(userId: string): Promise<GrowthMetric[]> {
     const { data, error } = await s()
       .from("analysis_reports")
@@ -753,9 +764,6 @@ export const Db = {
     });
   },
 
-  /**
-   * Notifications.
-   */
   async addNotification(
     userId: string,
     notif: Omit<StoredNotification, "id" | "userId" | "createdAt" | "read">
@@ -772,8 +780,6 @@ export const Db = {
         type: notif.type,
 
         is_read: false,
-
-        read: false,
 
         action_url: notif.actionUrl || null,
       })
@@ -795,7 +801,7 @@ export const Db = {
 
       type: data.type,
 
-      read: Boolean(data.is_read ?? data.read ?? false),
+      read: Boolean(data.is_read || false),
 
       createdAt: data.created_at,
 
@@ -827,7 +833,7 @@ export const Db = {
 
       type: n.type,
 
-      read: Boolean(n.is_read ?? n.read ?? false),
+      read: Boolean(n.is_read || false),
 
       createdAt: n.created_at,
 
@@ -839,11 +845,14 @@ export const Db = {
     notifId: string,
     userId?: string
   ): Promise<boolean> {
+    if (!notifId) {
+      return false;
+    }
+
     let query = s()
       .from("notifications")
       .update({
         is_read: true,
-        read: true,
       })
       .eq("id", notifId);
 
@@ -856,27 +865,27 @@ export const Db = {
     return !error && !!data;
   },
 
-  /**
-   * Referrals.
-   */
   async applyReferral(
     referrerCode: string,
     newUserId: string,
     newUserName: string
   ): Promise<boolean> {
-    const { data: referrer } = await s()
-      .from("users")
-      .select("*")
-      .eq("referral_code", referrerCode)
-      .maybeSingle();
+    const code = clean(referrerCode).toUpperCase();
 
-    if (!referrer || referrer.id === newUserId) {
+    if (!code || !newUserId) {
       return false;
     }
 
-    /**
-     * Prevent duplicate referral.
-     */
+    const { data: referrer, error: referrerError } = await s()
+      .from("users")
+      .select("*")
+      .ilike("referral_code", code)
+      .maybeSingle();
+
+    if (referrerError || !referrer || referrer.id === newUserId) {
+      return false;
+    }
+
     const { data: existingReferral } = await s()
       .from("referrals")
       .select("id")
@@ -912,13 +921,19 @@ export const Db = {
 
     await this.addXp(referrer.id, 100, "influencer");
 
-    await this.addNotification(referrer.id, {
-      title: "صديق جديد انضم عبر كودك 🎉",
+    try {
+      await this.addNotification(referrer.id, {
+        title: "صديق جديد انضم عبر كودك 🎉",
 
-      message: `انضم ${newUserName} إلى PERSONA وحصلت على +100 نقطة خبرة XP!`,
+        message: `انضم ${
+          newUserName || "مستخدم"
+        } إلى PERSONA وحصلت على +100 نقطة خبرة XP!`,
 
-      type: "recommendation",
-    });
+        type: "recommendation",
+      });
+    } catch (error) {
+      console.error("[REFERRAL NOTIFICATION]", error);
+    }
 
     return true;
   },
@@ -950,9 +965,10 @@ export const Db = {
         .maybeSingle();
 
       if (referredUser) {
-        referredUserName = `${referredUser.first_name || ""} ${
-          referredUser.last_name || ""
-        }`.trim();
+        referredUserName =
+          `${referredUser.first_name || ""} ${
+            referredUser.last_name || ""
+          }`.trim() || "User";
       }
 
       result.push({
@@ -975,14 +991,6 @@ export const Db = {
     return result;
   },
 
-  /**
-   * Audit.
-   *
-   * system_logs schema was not provided.
-   *
-   * Therefore we deliberately DON'T insert an assumed schema here.
-   * Authentication must never fail because of an optional audit log.
-   */
   async logAudit(
     action: string,
     userId: string,
@@ -996,9 +1004,6 @@ export const Db = {
     }
   },
 
-  /**
-   * Email registration.
-   */
   async registerUser(payload: {
     email?: string;
     password?: string;
@@ -1013,6 +1018,10 @@ export const Db = {
 
     const firstName = clean(payload.firstName);
 
+    const lastName = clean(payload.lastName);
+
+    const username = clean(payload.username).replace(/^@/, "");
+
     if (!email || !password) {
       throw new Error("البريد الإلكتروني وكلمة المرور مطلوبان");
     }
@@ -1025,9 +1034,16 @@ export const Db = {
       throw new Error("كلمة المرور يجب أن تكون 6 أحرف على الأقل");
     }
 
-    /**
-     * Create REAL Supabase Auth user.
-     */
+    const { data: existingEmail } = await s()
+      .from("users")
+      .select("id")
+      .ilike("email", email)
+      .maybeSingle();
+
+    if (existingEmail) {
+      throw new Error("هذا البريد الإلكتروني مستخدم مسبقاً");
+    }
+
     const { data: auth, error: authError } = await s().auth.admin.createUser({
       email,
 
@@ -1038,9 +1054,9 @@ export const Db = {
       user_metadata: {
         first_name: firstName,
 
-        last_name: payload.lastName,
+        last_name: lastName || undefined,
 
-        username: payload.username,
+        username: username || undefined,
       },
     });
 
@@ -1048,10 +1064,7 @@ export const Db = {
       throw authError || new Error("Registration failed");
     }
 
-    const referralCode = `PERSONA-${Math.random()
-      .toString(36)
-      .slice(2, 6)
-      .toUpperCase()}${Math.floor(10 + Math.random() * 90)}`;
+    const referralCode = createReferralCode();
 
     const { error } = await s()
       .from("users")
@@ -1064,9 +1077,9 @@ export const Db = {
 
         first_name: firstName,
 
-        last_name: clean(payload.lastName) || null,
+        last_name: lastName || null,
 
-        username: clean(payload.username?.replace("@", "")) || null,
+        username: username || null,
 
         avatar_url: null,
 
@@ -1080,7 +1093,7 @@ export const Db = {
 
         current_streak: 1,
 
-        last_active_date: new Date().toISOString().slice(0, 10),
+        last_active_date: today(),
 
         onboarding_completed: false,
 
@@ -1117,14 +1130,6 @@ export const Db = {
     return user;
   },
 
-  /**
-   * Login using:
-   *
-   * email
-   * username
-   * referral code
-   * UUID
-   */
   async loginUser(
     identifier: string,
     password?: string
@@ -1141,16 +1146,9 @@ export const Db = {
 
     let email = cleanId;
 
-    /**
-     * If identifier is not email,
-     * resolve it through users.
-     */
     if (!cleanId.includes("@")) {
       let row: any = null;
 
-      /**
-       * username
-       */
       const { data: usernameRow } = await s()
         .from("users")
         .select("email")
@@ -1159,9 +1157,6 @@ export const Db = {
 
       row = usernameRow;
 
-      /**
-       * referral code
-       */
       if (!row) {
         const { data: referralRow } = await s()
           .from("users")
@@ -1172,9 +1167,6 @@ export const Db = {
         row = referralRow;
       }
 
-      /**
-       * UUID
-       */
       if (!row && isUuid(cleanId)) {
         const { data: uuidRow } = await s()
           .from("users")
@@ -1189,14 +1181,12 @@ export const Db = {
         return null;
       }
 
-      email = row.email;
+      email = clean(row.email).toLowerCase();
     }
 
-    /**
-     * REAL Supabase Auth login.
-     */
     const { data, error } = await getSupabaseAuth().auth.signInWithPassword({
       email,
+
       password,
     });
 
@@ -1204,17 +1194,18 @@ export const Db = {
       return null;
     }
 
-    /**
-     * Update activity.
-     */
-    await s()
+    const { error: updateError } = await s()
       .from("users")
       .update({
         updated_at: now(),
 
-        last_active_date: new Date().toISOString().slice(0, 10),
+        last_active_date: today(),
       })
       .eq("id", data.user.id);
+
+    if (updateError) {
+      console.error("[LOGIN ACTIVITY]", updateError.message);
+    }
 
     await this.logAudit(
       "USER_LOGIN",
@@ -1238,9 +1229,6 @@ export const Db = {
     };
   },
 
-  /**
-   * Chat history.
-   */
   async saveChatMessage(msg: StoredChatMessage): Promise<void> {
     const { error } = await s()
       .from("chat_history")
@@ -1292,15 +1280,6 @@ export const Db = {
     }));
   },
 
-  /**
-   * PERSONAL GOALS
-   *
-   * Real table:
-   * personal_goals
-   *
-   * Goal check-ins:
-   * goal_checkins
-   */
   async getUserGoals(userId: string): Promise<PersonalGoal[]> {
     const { data, error } = await s()
       .from("personal_goals")
@@ -1319,7 +1298,7 @@ export const Db = {
     const result: PersonalGoal[] = [];
 
     for (const row of goals) {
-      const { data: checkins } = await s()
+      const { data: checkins, error: checkinsError } = await s()
         .from("goal_checkins")
         .select("*")
         .eq("goal_id", row.id)
@@ -1327,6 +1306,14 @@ export const Db = {
         .order("created_at", {
           ascending: false,
         });
+
+      if (checkinsError) {
+        throw checkinsError;
+      }
+
+      const targetCount = Number(row.target_count || 0);
+
+      const totalCompletions = Number(row.total_completions || 0);
 
       result.push({
         id: row.id,
@@ -1339,18 +1326,12 @@ export const Db = {
 
         targetFrequency: row.frequency || "daily",
 
-        targetDaysPerWeek: row.target_count || undefined,
+        targetDaysPerWeek: targetCount || undefined,
 
-        progress: row.target_count
-          ? Math.min(
-              100,
-              Math.round(
-                (Number(row.total_completions || 0) /
-                  Number(row.target_count)) *
-                  100
-              )
-            )
-          : 0,
+        progress:
+          targetCount > 0
+            ? Math.min(100, Math.round((totalCompletions / targetCount) * 100))
+            : 0,
 
         streak: Number(row.current_streak || 0),
 
@@ -1385,11 +1366,21 @@ export const Db = {
   },
 
   async saveGoal(goal: PersonalGoal): Promise<PersonalGoal> {
-    const existing = await s()
+    if (!goal?.userId) {
+      throw new Error("Goal userId is required");
+    }
+
+    let goalId = isUuid(goal.id) ? goal.id : randomUUID();
+
+    const { data: existing } = await s()
       .from("personal_goals")
-      .select("id")
-      .eq("id", goal.id)
+      .select("id,user_id")
+      .eq("id", goalId)
       .maybeSingle();
+
+    if (existing && existing.user_id !== goal.userId) {
+      goalId = randomUUID();
+    }
 
     const dimensionMap: Record<
       string,
@@ -1404,31 +1395,37 @@ export const Db = {
         ar: "العادات",
         en: "Habits",
       },
+
       focus: {
         key: "focus",
         ar: "التركيز",
         en: "Focus",
       },
+
       vitality: {
         key: "vitality",
         ar: "الحيوية",
         en: "Vitality",
       },
+
       mindset: {
         key: "mindset",
         ar: "العقلية",
         en: "Mindset",
       },
+
       emotional: {
         key: "emotional",
         ar: "الوعي العاطفي",
         en: "Emotional Awareness",
       },
+
       social: {
         key: "social",
         ar: "التواصل الاجتماعي",
         en: "Social",
       },
+
       career: {
         key: "career",
         ar: "المسار المهني",
@@ -1438,31 +1435,44 @@ export const Db = {
 
     const dimension = dimensionMap[goal.category] || {
       key: goal.category || "habits",
+
       ar: goal.category || "العادات",
+
       en: goal.category || "Habits",
     };
 
+    const checkIns = goal.checkIns || [];
+
+    const totalCompletions = checkIns.filter(
+      (c) => c.status === "completed"
+    ).length;
+
     const row = {
-      id: goal.id,
+      id: goalId,
+
       user_id: goal.userId,
 
       dimension_key: dimension.key,
+
       dimension_name_ar: dimension.ar,
+
       dimension_name_en: dimension.en,
 
       title_ar: goal.title,
+
       title_en: goal.title,
 
       category: goal.category,
+
       frequency: goal.targetFrequency,
-      target_count: goal.targetDaysPerWeek || 1,
 
-      current_streak: goal.streak || 0,
-      last_streak: goal.streak || 0,
+      target_count: Number(goal.targetDaysPerWeek || 1),
 
-      total_completions: (goal.checkIns || []).filter(
-        (c) => c.status === "completed"
-      ).length,
+      current_streak: Number(goal.streak || 0),
+
+      last_streak: Number(goal.streak || 0),
+
+      total_completions: totalCompletions,
 
       last_check_in_date: goal.lastCheckIn
         ? goal.lastCheckIn.slice(0, 10)
@@ -1471,7 +1481,9 @@ export const Db = {
       ai_prompt: goal.aiCheckInPrompt || null,
 
       is_active: true,
+
       created_at: goal.createdAt || now(),
+
       updated_at: now(),
     };
 
@@ -1480,15 +1492,15 @@ export const Db = {
     if (error) {
       throw error;
     }
-    /**
-     * Only award XP on creation,
-     * not every update.
-     */
-    if (!existing.data) {
+
+    if (!existing) {
       await this.addXp(goal.userId, 40, "goal_hunter");
     }
 
-    return goal;
+    return {
+      ...goal,
+      id: goalId,
+    };
   },
 
   async updateGoal(
@@ -1496,6 +1508,10 @@ export const Db = {
     goalId: string,
     updates: Partial<PersonalGoal>
   ): Promise<PersonalGoal | null> {
+    if (!userId || !goalId) {
+      return null;
+    }
+
     const { data, error } = await s()
       .from("personal_goals")
       .select("*")
@@ -1519,6 +1535,67 @@ export const Db = {
 
     if (updates.category !== undefined) {
       patch.category = updates.category;
+
+      const dimensionMap: Record<
+        string,
+        {
+          key: string;
+          ar: string;
+          en: string;
+        }
+      > = {
+        habits: {
+          key: "habits",
+          ar: "العادات",
+          en: "Habits",
+        },
+
+        focus: {
+          key: "focus",
+          ar: "التركيز",
+          en: "Focus",
+        },
+
+        vitality: {
+          key: "vitality",
+          ar: "الحيوية",
+          en: "Vitality",
+        },
+
+        mindset: {
+          key: "mindset",
+          ar: "العقلية",
+          en: "Mindset",
+        },
+
+        emotional: {
+          key: "emotional",
+          ar: "الوعي العاطفي",
+          en: "Emotional Awareness",
+        },
+
+        social: {
+          key: "social",
+          ar: "التواصل الاجتماعي",
+          en: "Social",
+        },
+
+        career: {
+          key: "career",
+          ar: "المسار المهني",
+          en: "Career",
+        },
+      };
+
+      const dimension = dimensionMap[updates.category];
+
+      if (dimension) {
+        patch.dimension_key = dimension.key;
+
+        patch.dimension_name_ar = dimension.ar;
+
+        patch.dimension_name_en = dimension.en;
+      }
     }
 
     if (updates.targetFrequency !== undefined) {
@@ -1526,11 +1603,13 @@ export const Db = {
     }
 
     if (updates.targetDaysPerWeek !== undefined) {
-      patch.target_count = updates.targetDaysPerWeek;
+      patch.target_count = Number(updates.targetDaysPerWeek);
     }
 
     if (updates.streak !== undefined) {
-      patch.current_streak = updates.streak;
+      patch.current_streak = Number(updates.streak);
+
+      patch.last_streak = Number(updates.streak);
     }
 
     if (updates.lastCheckIn !== undefined) {
@@ -1553,20 +1632,9 @@ export const Db = {
       throw updateError;
     }
 
-    const updated = await s()
-      .from("personal_goals")
-      .select("*")
-      .eq("id", goalId)
-      .eq("user_id", userId)
-      .single();
+    const goals = await this.getUserGoals(userId);
 
-    if (updated.error) {
-      throw updated.error;
-    }
-
-    return this.getUserGoals(userId).then(
-      (goals) => goals.find((g) => g.id === goalId) || null
-    );
+    return goals.find((g) => g.id === goalId) || null;
   },
 
   async deleteGoal(userId: string, goalId: string): Promise<boolean> {
@@ -1581,11 +1649,6 @@ export const Db = {
     return !error && (count || 0) > 0;
   },
 
-  /**
-   * Record check-in in goal_checkins.
-   *
-   * Also updates aggregate fields on personal_goals.
-   */
   async recordGoalCheckIn(
     userId: string,
     goalId: string,
@@ -1594,14 +1657,14 @@ export const Db = {
     goal: PersonalGoal;
     checkIn: GoalCheckIn;
   } | null> {
-    const { data: goal } = await s()
+    const { data: goal, error: goalError } = await s()
       .from("personal_goals")
       .select("*")
       .eq("id", goalId)
       .eq("user_id", userId)
       .maybeSingle();
 
-    if (!goal) {
+    if (goalError || !goal) {
       return null;
     }
 
@@ -1649,6 +1712,7 @@ export const Db = {
 
     if (checkIn.status === "completed") {
       currentStreak += 1;
+
       totalCompletions += 1;
     } else if (checkIn.status === "struggled") {
       currentStreak = 0;
@@ -1705,11 +1769,6 @@ export const Db = {
     };
   },
 
-  /**
-   * GROWTH CHALLENGES
-   *
-   * Uses the real normalized columns.
-   */
   async getUserChallenges(userId: string): Promise<GrowthChallenge[]> {
     const { data, error } = await s()
       .from("growth_challenges")
@@ -1727,6 +1786,16 @@ export const Db = {
   },
 
   mapChallenge(row: any): GrowthChallenge {
+    const startedAt = row.started_at || row.created_at || now();
+
+    const durationHours = Number(row.duration_hours || 24);
+
+    const expiresAt =
+      row.expires_at ||
+      new Date(
+        new Date(startedAt).getTime() + durationHours * 60 * 60 * 1000
+      ).toISOString();
+
     return {
       id: row.id,
 
@@ -1760,7 +1829,7 @@ export const Db = {
 
       scientificRationaleEn: row.scientific_rationale_en || "",
 
-      durationHours: Number(row.duration_hours || 24),
+      durationHours,
 
       xpReward: Number(row.xp_reward || 50),
 
@@ -1771,14 +1840,9 @@ export const Db = {
           ? "expired"
           : "active",
 
-      startedAt: row.started_at,
+      startedAt,
 
-      expiresAt:
-        row.expires_at ||
-        new Date(
-          new Date(row.started_at).getTime() +
-            Number(row.duration_hours || 24) * 60 * 60 * 1000
-        ).toISOString(),
+      expiresAt,
 
       completedAt: row.completed_at || undefined,
 
@@ -1786,11 +1850,6 @@ export const Db = {
 
       aiEvaluation: row.ai_completion_feedback || undefined,
 
-      /**
-       * These two fields don't exist
-       * as columns in your current DB.
-       * Safe defaults.
-       */
       difficulty: "standard",
 
       category: "mindset",
@@ -1823,6 +1882,7 @@ export const Db = {
         .from("growth_challenges")
         .update({
           status: "expired",
+          updated_at: now(),
         })
         .eq("id", challenge.id)
         .eq("user_id", userId);
@@ -1837,24 +1897,38 @@ export const Db = {
     userId: string,
     challenge: GrowthChallenge
   ): Promise<GrowthChallenge> {
-    /**
-     * Ensure only one active challenge.
-     */
+    if (!userId || !challenge) {
+      throw new Error("Invalid challenge");
+    }
+
+    const challengeId = isUuid(challenge.id) ? challenge.id : randomUUID();
+
     if (challenge.status === "active") {
       await s()
         .from("growth_challenges")
         .update({
           status: "expired",
+
+          updated_at: now(),
         })
         .eq("user_id", userId)
         .eq("status", "active")
-        .neq("id", challenge.id);
+        .neq("id", challengeId);
     }
+
+    const startedAt = challenge.startedAt || now();
+
+    const expiresAt =
+      challenge.expiresAt ||
+      new Date(
+        new Date(startedAt).getTime() +
+          Number(challenge.durationHours || 24) * 60 * 60 * 1000
+      ).toISOString();
 
     const { error } = await s()
       .from("growth_challenges")
       .upsert({
-        id: challenge.id,
+        id: challengeId,
 
         user_id: userId,
 
@@ -1874,17 +1948,17 @@ export const Db = {
 
         description_en: challenge.descriptionEn,
 
-        action_steps_ar: challenge.actionStepsAr,
+        action_steps_ar: challenge.actionStepsAr || [],
 
-        action_steps_en: challenge.actionStepsEn,
+        action_steps_en: challenge.actionStepsEn || [],
 
-        scientific_rationale_ar: challenge.scientificRationaleAr,
+        scientific_rationale_ar: challenge.scientificRationaleAr || "",
 
-        scientific_rationale_en: challenge.scientificRationaleEn,
+        scientific_rationale_en: challenge.scientificRationaleEn || "",
 
-        duration_hours: challenge.durationHours,
+        duration_hours: Number(challenge.durationHours || 24),
 
-        xp_reward: challenge.xpReward,
+        xp_reward: Number(challenge.xpReward || 50),
 
         status: challenge.status,
 
@@ -1892,9 +1966,9 @@ export const Db = {
 
         ai_completion_feedback: challenge.aiEvaluation || null,
 
-        started_at: challenge.startedAt || now(),
+        started_at: startedAt,
 
-        expires_at: challenge.expiresAt || null,
+        expires_at: expiresAt,
 
         completed_at: challenge.completedAt || null,
 
@@ -1905,7 +1979,17 @@ export const Db = {
       throw error;
     }
 
-    return challenge;
+    return {
+      ...challenge,
+
+      id: challengeId,
+
+      userId: userId,
+
+      startedAt,
+
+      expiresAt,
+    };
   },
 
   async completeChallenge(
@@ -1930,7 +2014,19 @@ export const Db = {
 
     const challenge = this.mapChallenge(data);
 
-    const xpEarned = challenge.xpReward || 60;
+    if (challenge.status === "completed") {
+      return {
+        challenge,
+
+        xpEarned: 0,
+      };
+    }
+
+    if (challenge.status === "expired") {
+      return null;
+    }
+
+    const xpEarned = Number(challenge.xpReward || 60);
 
     const completedAt = now();
 
@@ -1944,6 +2040,8 @@ export const Db = {
         user_reflection: reflectionNote || "",
 
         ai_completion_feedback: aiEvaluation || null,
+
+        updated_at: completedAt,
       })
       .eq("id", challengeId)
       .eq("user_id", userId);
@@ -1971,9 +2069,6 @@ export const Db = {
     };
   },
 
-  /**
-   * ADMIN STATS
-   */
   async getAdminStats(): Promise<Record<string, any>> {
     const [usersResult, reportsResult, xpLogsResult] = await Promise.all([
       s()
@@ -1997,28 +2092,41 @@ export const Db = {
         .limit(15),
     ]);
 
-    const users = usersResult.data || [];
-    const reports = reportsResult.data || [];
-    const logs = xpLogsResult.data || [];
+    if (usersResult.error) {
+      console.error("[AdminStats] Users:", usersResult.error.message);
+    }
 
-    // ==========================================
-    // REAL SUPABASE AUTH USERS
-    // ==========================================
+    if (reportsResult.error) {
+      console.error("[AdminStats] Reports:", reportsResult.error.message);
+    }
+
+    if (xpLogsResult.error) {
+      console.error("[AdminStats] XP logs:", xpLogsResult.error.message);
+    }
+
+    const users = usersResult.data || [];
+
+    const reports = reportsResult.data || [];
+
+    const logs = xpLogsResult.data || [];
 
     const authUsersMap = new Map<string, any>();
 
     try {
       let page = 1;
+
       const perPage = 1000;
 
       while (true) {
         const { data, error } = await getSupabaseAuth().auth.admin.listUsers({
           page,
+
           perPage,
         });
 
         if (error) {
           console.error("[AdminStats] Auth users error:", error);
+
           break;
         }
 
@@ -2036,25 +2144,21 @@ export const Db = {
       console.error("[AdminStats] Failed to load Supabase Auth users:", error);
     }
 
-    // ==========================================
-    // REFERRALS
-    // ==========================================
-
     const referralCounts = new Map<string, number>();
 
-    const { data: referrals } = await s()
+    const { data: referrals, error: referralsError } = await s()
       .from("referrals")
       .select("referrer_id");
+
+    if (referralsError) {
+      console.error("[AdminStats] Referrals:", referralsError.message);
+    }
 
     for (const referral of referrals || []) {
       const id = referral.referrer_id;
 
       referralCounts.set(id, (referralCounts.get(id) || 0) + 1);
     }
-
-    // ==========================================
-    // MERGE DATABASE USERS + SUPABASE AUTH
-    // ==========================================
 
     const list = users.map((u: any) => {
       const mapped = mapUser(u, referralCounts.get(u.id) || 0);
@@ -2064,28 +2168,17 @@ export const Db = {
       return {
         ...mapped,
 
-        // Real email from Supabase Auth when available
         email: authUser?.email || mapped.email || undefined,
 
-        // Real Auth creation time
         createdAt: authUser?.created_at || mapped.createdAt,
 
-        // REAL LAST SIGN IN FROM SUPABASE AUTH
         lastLogin: authUser?.last_sign_in_at || mapped.lastLogin || undefined,
       };
     });
 
-    // ==========================================
-    // PREMIUM
-    // ==========================================
-
     const premiumUsers = list.filter((u) =>
       ["premium", "admin", "super_admin"].includes(u.role)
     );
-
-    // ==========================================
-    // ARCHETYPES
-    // ==========================================
 
     const counts: Record<string, number> = {};
 
@@ -2095,33 +2188,27 @@ export const Db = {
       counts[id] = (counts[id] || 0) + 1;
     }
 
-    // ==========================================
-    // ACTIVITY
-    // ==========================================
-
     const nowMs = Date.now();
 
     const activeUsers24h = list.filter((u) => {
-      if (!u.lastLogin) return false;
+      if (!u.lastLogin) {
+        return false;
+      }
 
       const loginTime = new Date(u.lastLogin).getTime();
 
       return !Number.isNaN(loginTime) && nowMs - loginTime < 86400000;
     }).length;
 
-    // ==========================================
-    // NEW USERS
-    // ==========================================
-
     const newUsers7d = list.filter((u) => {
+      if (!u.createdAt) {
+        return false;
+      }
+
       const createdTime = new Date(u.createdAt).getTime();
 
       return !Number.isNaN(createdTime) && nowMs - createdTime < 7 * 86400000;
     }).length;
-
-    // ==========================================
-    // AVERAGE SCORE
-    // ==========================================
 
     const averageScore = reports.length
       ? Math.round(
@@ -2133,26 +2220,22 @@ export const Db = {
         )
       : 0;
 
-    // ==========================================
-    // AI REQUESTS
-    // ==========================================
-
     let aiRequestsCount = 0;
 
     try {
-      const { count } = await s().from("ai_requests").select("id", {
-        count: "exact",
-        head: true,
-      });
+      const { count, error: aiError } = await s()
+        .from("ai_requests")
+        .select("id", {
+          count: "exact",
+          head: true,
+        });
 
-      aiRequestsCount = count || 0;
+      if (!aiError) {
+        aiRequestsCount = count || 0;
+      }
     } catch {
       aiRequestsCount = 0;
     }
-
-    // ==========================================
-    // RETURN ADMIN TELEMETRY
-    // ==========================================
 
     return {
       totalUsers: list.length,
@@ -2174,15 +2257,17 @@ export const Db = {
       topArchetypes: Object.entries(counts)
         .map(([id, count]) => ({
           id,
+
           name: id,
+
           nameEn: id,
+
           count,
         }))
         .sort((a: any, b: any) => b.count - a.count),
 
       recentLogs: logs,
 
-      // USERS FOR ADMIN DASHBOARD
       users: list.slice(0, 50),
     };
   },
