@@ -228,7 +228,11 @@ async function startServer() {
       );
     } catch (err: any) {
       console.error("[API Register Error]:", err);
-      return sendError(res, err.message || "Registration failed", 400);
+      const code = String(err?.code || "");
+      if (code === "23505") {
+        return sendError(res, "هذا البريد الإلكتروني أو اسم المستخدم مستخدم مسبقاً", 409);
+      }
+      return sendError(res, err?.status === 400 ? String(err.message) : "Registration failed", err?.status === 400 ? 400 : 500);
     }
   });
 
@@ -292,15 +296,12 @@ async function startServer() {
         return sendError(res, "Unauthorized", 401);
       }
 
-      const user = await Db.getUser(authUser.id);
-      if (!user) {
-        return sendError(res, "User profile not found", 404);
-      }
+      const user = await Db.ensureAuthUserProfile(authUser);
 
       return sendSuccess(res, user);
     } catch (err: any) {
       console.error("[API Auth Me]", err);
-      return sendError(res, "Failed to load authenticated user", 401);
+      return sendError(res, "Failed to load authenticated user", 500);
     }
   });
 

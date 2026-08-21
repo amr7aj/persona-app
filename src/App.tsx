@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { AppProvider, useApp } from "./context/AppContext";
 
 import { Header } from "./components/common/Header";
@@ -24,6 +24,12 @@ import { SettingsView } from "./components/views/SettingsView";
 
 const AppContent: React.FC = () => {
   const { currentView, loading, user, setView } = useApp();
+
+  useEffect(() => {
+    if (user && currentView === "auth") {
+      setView(user.onboardingCompleted ? "home" : "onboarding");
+    }
+  }, [user, currentView, setView]);
 
   /*
    * Authentication Gate
@@ -88,7 +94,6 @@ const AppContent: React.FC = () => {
    * move the user into the application.
    */
   if (currentView === "auth") {
-    setView(user.onboardingCompleted ? "home" : "onboarding");
     return (
       <div className="min-h-screen bg-[#0B0B0F] flex items-center justify-center">
         <div className="text-sm text-[#9CA3AF]">Loading PERSONA...</div>

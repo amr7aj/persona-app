@@ -170,11 +170,80 @@ async function getUserRow(userId: string): Promise<any | null> {
     .eq("id", userId)
     .maybeSingle();
 
-  if (error || !data) {
-    return null;
+  if (error) {
+    throw error;
   }
 
-  return data;
+  return data || null;
+}
+
+async function ensureAuthUserProfile(authUser: any): Promise<ServerUser> {
+  const authId = String(authUser?.id || "").trim();
+  const email = clean(authUser?.email).toLowerCase();
+
+  if (!authId || !isUuid(authId)) {
+    throw new Error("Authenticated user ID is invalid");
+  }
+
+  let user = await Db.getUser(authId);
+  if (user) return user;
+
+  // Legacy profile: the email belongs to this Auth identity but the public
+  // profile still has the pre-Supabase UUID. Reconcile the existing data
+  // instead of creating a second profile.
+  if (email) {
+    const { data: legacyRow, error: legacyError } = await s()
+      .from("users")
+      .select("id")
+      .eq("email", email)
+      .maybeSingle();
+
+    if (legacyError) throw legacyError;
+
+    if (legacyRow?.id && legacyRow.id !== authId) {
+      await Db.rekeyUserId(legacyRow.id, authId);
+      user = await Db.getUser(authId);
+      if (user) return user;
+    }
+  }
+
+  // A valid Supabase Auth identity can exist without its application profile
+  // (for example after a partially completed registration). Create the real
+  // profile from Auth metadata; never invent an unrelated user identity.
+  const meta = (authUser.user_metadata || {}) as Record<string, any>;
+  const firstName = clean(meta.first_name) || clean(meta.name) || "User";
+  const lastName = clean(meta.last_name);
+  const username = clean(meta.username).replace(/^@/, "");
+
+  const { error: profileError } = await s().from("users").insert({
+    id: authId,
+    email: email || null,
+    telegram_id: null,
+    first_name: firstName,
+    last_name: lastName || null,
+    username: username || null,
+    avatar_url: clean(meta.avatar_url) || null,
+    language: meta.language === "en" ? "en" : "ar",
+    role: "user",
+    level: 1,
+    xp: 100,
+    current_streak: 1,
+    last_active_date: today(),
+    onboarding_completed: false,
+    referral_code: createReferralCode(),
+    referred_by: null,
+    custom_settings: {},
+    badges: ["explorer"],
+    updated_at: now(),
+  });
+
+  if (profileError && profileError.code !== "23505") {
+    throw profileError;
+  }
+
+  user = await Db.getUser(authId);
+  if (!user) throw new Error("Authenticated user profile could not be loaded");
+  return user;
 }
 
 export const Db = {
@@ -184,6 +253,10 @@ export const Db = {
     if (error) {
       console.error("[DB INIT]", error.message);
     }
+  },
+
+  async ensureAuthUserProfile(authUser: any): Promise<ServerUser> {
+    return ensureAuthUserProfile(authUser);
   },
 
   async getUser(userId: string): Promise<ServerUser | undefined> {
@@ -1980,7 +2053,11 @@ export const Db = {
       .limit(1)
       .maybeSingle();
 
-    if (error || !data) {
+    if (error) {
+      throw error;
+    }
+
+    if (!data) {
       return null;
     }
 
