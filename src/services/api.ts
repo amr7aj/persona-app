@@ -12,19 +12,7 @@ import {
   GrowthChallenge,
 } from "../types";
 
-const configuredApiBaseUrl = String(
-  (import.meta as any).env?.VITE_API_BASE_URL || ""
-).trim().replace(/\/$/, "");
-
-// In local development the Express server and Vite share the same origin.
-// Keeping this same-origin by default prevents a local browser session from
-// accidentally sending credentials to the production Railway API.
-// For production/Capacitor builds, set VITE_API_BASE_URL to the deployed API.
-const API_BASE_URL =
-  (import.meta as any).env?.DEV === true
-    ? ""
-    : configuredApiBaseUrl;
-
+const API_BASE_URL = "https://persona-app-production-f193.up.railway.app";
 let refreshPromise: Promise<string | null> | null = null;
 
 async function refreshAccessToken(): Promise<string | null> {
