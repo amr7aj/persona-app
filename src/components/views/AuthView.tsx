@@ -24,6 +24,7 @@ export const AuthView: React.FC = () => {
   const { language, login, register, switchUser, setView, triggerHaptic } = useApp();
   const isAr = language === 'ar';
 
+  const demoMode = (import.meta as any).env?.VITE_DEMO_MODE === 'true';
   const [tab, setTab] = useState<'login' | 'register' | 'demo'>('login');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -45,6 +46,7 @@ export const AuthView: React.FC = () => {
   const [demoAccounts, setDemoAccounts] = useState<any[]>([]);
 
   useEffect(() => {
+    if (!demoMode) return;
     async function loadDemos() {
       try {
         const demos = await Api.getDemoAccounts();
@@ -54,7 +56,7 @@ export const AuthView: React.FC = () => {
       }
     }
     loadDemos();
-  }, []);
+  }, [demoMode]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,7 +67,7 @@ export const AuthView: React.FC = () => {
     setErrorMsg(null);
     setIsLoading(true);
     try {
-      await login(identifier, password || undefined);
+      await login(identifier, password);
       setSuccessMsg(isAr ? 'تم تسجيل الدخول بنجاح! مرحباً بك' : 'Logged in successfully! Welcome back');
       setTimeout(() => {
         setView('home');
@@ -84,6 +86,14 @@ export const AuthView: React.FC = () => {
       setErrorMsg(isAr ? 'الاسم الأول مطلوب' : 'First name is required');
       return;
     }
+    if (!regEmail.trim()) {
+      setErrorMsg(isAr ? 'البريد الإلكتروني مطلوب' : 'Email is required');
+      return;
+    }
+    if (!regPassword || regPassword.length < 6) {
+      setErrorMsg(isAr ? 'كلمة المرور يجب أن تكون 6 أحرف على الأقل' : 'Password must be at least 6 characters');
+      return;
+    }
     setErrorMsg(null);
     setIsLoading(true);
     try {
@@ -91,8 +101,8 @@ export const AuthView: React.FC = () => {
         firstName,
         lastName,
         username: regUsername || undefined,
-        email: regEmail || undefined,
-        password: regPassword || undefined
+        email: regEmail,
+        password: regPassword
       });
       setSuccessMsg(isAr ? 'تم إنشاء الحساب بنجاح! جاهز للانطلاق' : 'Account created successfully! Welcome');
       setTimeout(() => {
@@ -109,8 +119,8 @@ export const AuthView: React.FC = () => {
   const handleDemoSwitch = async (account: any) => {
     setIsLoading(true);
     try {
-      const fullProfile = await Api.getUserProfile(account.id);
-      await switchUser(fullProfile);
+      const auth = await Api.demoLogin(account.id);
+      await switchUser(auth.user);
       setSuccessMsg(
         isAr
           ? `تم التبديل بنجاح إلى حساب: ${account.name}`
@@ -197,7 +207,7 @@ export const AuthView: React.FC = () => {
         >
           {isAr ? 'إنشاء حساب جديد' : 'Register'}
         </button>
-        <button
+        {demoMode && <button
           id="tab-demo"
           type="button"
           onClick={() => {
@@ -211,7 +221,7 @@ export const AuthView: React.FC = () => {
           }`}
         >
           {isAr ? 'تبديل الحسابات' : 'Switch Profiles'}
-        </button>
+        </button>}
       </div>
 
       {/* Notification banners */}

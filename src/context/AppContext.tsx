@@ -85,10 +85,10 @@ interface AppContextType {
   triggerHaptic: (
     type?: "light" | "medium" | "heavy" | "success" | "warning" | "error"
   ) => void;
-  login: (identifier: string, password?: string) => Promise<UserProfile>;
+  login: (identifier: string, password: string) => Promise<UserProfile>;
   register: (payload: {
-    email?: string;
-    password?: string;
+    email: string;
+    password: string;
     firstName: string;
     lastName?: string;
     username?: string;
@@ -208,8 +208,6 @@ export const AppProvider: React.FC<{
       try {
         setLoading(true);
 
-        const savedUserId = localStorage.getItem("persona_active_user_id");
-
         let tgUser: any = undefined;
 
         let activeUser: UserProfile | null = null;
@@ -232,26 +230,15 @@ export const AppProvider: React.FC<{
           }
         }
 
-        /*
-         * Existing application session.
-         *
-         * IMPORTANT:
-         * This is kept temporarily because we are only fixing
-         * the frontend access gate in this step.
-         *
-         * Later we should replace this with direct Supabase
-         * Auth session verification.
-         */
-        if (!activeUser && savedUserId) {
+        // Restore the session from the Supabase access token, not from a
+        // locally stored user ID. The backend validates the token against
+        // auth.users and then loads public.users by the same UUID.
+        if (!activeUser && localStorage.getItem("persona_token")) {
           try {
-            activeUser = await Api.getUserProfile(savedUserId);
+            activeUser = await Api.getCurrentUser();
           } catch (error) {
-            console.error("[App Init] Failed to restore saved user:", error);
-
-            localStorage.removeItem("persona_active_user_id");
-
+            console.error("[App Init] Failed to restore Auth session:", error);
             localStorage.removeItem("persona_token");
-
             localStorage.removeItem("persona_refresh_token");
           }
         }
@@ -269,8 +256,6 @@ export const AppProvider: React.FC<{
          * Authenticated user exists.
          */
         setUser(activeUser);
-
-        localStorage.setItem("persona_active_user_id", activeUser.id);
 
         setLanguageState(activeUser.language || "ar");
 
@@ -405,17 +390,34 @@ export const AppProvider: React.FC<{
       | "warning"
       | "error" = "light"
   ) => {
-    if (
-      typeof window !== "undefined" &&
-      (window as any).Telegram?.WebApp?.HapticFeedback
-    ) {
-      const haptic = (window as any).Telegram.WebApp.HapticFeedback;
+    if (typeof window === "undefined") return;
 
-      if (type === "success" || type === "warning" || type === "error") {
+    const webApp = (window as any).Telegram?.WebApp;
+    if (!webApp?.HapticFeedback) return;
+
+    // HapticFeedback is supported from Telegram Mini Apps API 6.1.
+    // Older clients expose the object inconsistently, so guard both the
+    // version and the concrete methods before invoking them.
+    const supportsHaptics =
+      typeof webApp.isVersionAtLeast === "function"
+        ? webApp.isVersionAtLeast("6.1")
+        : false;
+
+    if (!supportsHaptics) return;
+
+    try {
+      const haptic = webApp.HapticFeedback;
+      if (
+        (type === "success" || type === "warning" || type === "error") &&
+        typeof haptic.notificationOccurred === "function"
+      ) {
         haptic.notificationOccurred(type);
-      } else {
+      } else if (typeof haptic.impactOccurred === "function") {
         haptic.impactOccurred(type);
       }
+    } catch {
+      // Haptics are optional UX feedback; never let an unsupported Telegram
+      // client interrupt the application flow.
     }
   };
 
@@ -522,7 +524,7 @@ export const AppProvider: React.FC<{
 
   const login = async (
     identifier: string,
-    password?: string
+    password: string
   ): Promise<UserProfile> => {
     const res = await Api.loginUser({
       identifier,
@@ -530,8 +532,6 @@ export const AppProvider: React.FC<{
     });
 
     setUser(res.user);
-
-    localStorage.setItem("persona_active_user_id", res.user.id);
 
     setLanguageState(res.user.language || "ar");
 
@@ -573,20 +573,42 @@ export const AppProvider: React.FC<{
   };
 
   const register = async (payload: {
-    email?: string;
-    password?: string;
+    email: string;
+    password: string;
     firstName: string;
     lastName?: string;
     username?: string;
   }): Promise<UserProfile> => {
+    const email = payload.email.trim();
+    const password = payload.password;
+    const firstName = payload.firstName.trim();
+
+    if (!email) {
+      throw new Error(language === "ar" ? "البريد الإلكتروني مطلوب" : "Email is required");
+    }
+
+    if (!password || password.length < 6) {
+      throw new Error(
+        language === "ar"
+          ? "كلمة المرور يجب أن تكون 6 أحرف على الأقل"
+          : "Password must be at least 6 characters"
+      );
+    }
+
+    if (!firstName) {
+      throw new Error(language === "ar" ? "الاسم الأول مطلوب" : "First name is required");
+    }
+
     const res = await Api.registerUser({
-      ...payload,
+      email,
+      password,
+      firstName,
+      lastName: payload.lastName?.trim() || undefined,
+      username: payload.username?.trim() || undefined,
       language,
     });
 
     setUser(res.user);
-
-    localStorage.setItem("persona_active_user_id", res.user.id);
 
     /*
      * Load fresh data after registration.
@@ -621,8 +643,6 @@ export const AppProvider: React.FC<{
   const switchUser = async (targetUser: UserProfile) => {
     setUser(targetUser);
 
-    localStorage.setItem("persona_active_user_id", targetUser.id);
-
     setLanguageState(targetUser.language || "ar");
 
     try {
@@ -646,14 +666,7 @@ export const AppProvider: React.FC<{
   };
 
   const logout = () => {
-    /*
-     * Remove local application session data.
-     */
-    localStorage.removeItem("persona_active_user_id");
-
-    localStorage.removeItem("persona_token");
-
-    localStorage.removeItem("persona_refresh_token");
+    void Api.logout();
 
     /*
      * Clear application state.

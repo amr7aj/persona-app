@@ -35,12 +35,9 @@ export const AdminDashboardView: React.FC = () => {
   }, []);
 
   const loadStats = async () => {
-    console.log("LOAD STATS CALLED");
     try {
       setLoading(true);
       const data = await Api.getAdminStats();
-      console.log("ADMIN STATS:", data);
-      console.log("ADMIN USERS:", data.users);
       setStats(data);
     } catch (e) {
       console.error("Failed to load admin telemetry", e);
@@ -68,11 +65,7 @@ export const AdminDashboardView: React.FC = () => {
 
   const handleRoleChange = async (targetUserId: string, newRole: string) => {
     try {
-      await Api.updateAdminRole(
-        "persona_admin_secret_2026",
-        targetUserId,
-        newRole
-      );
+      await Api.updateAdminRole(targetUserId, newRole);
       triggerHaptic("medium");
       loadStats();
     } catch (e) {

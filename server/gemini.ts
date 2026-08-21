@@ -78,7 +78,6 @@ Generate structured JSON matching the exact schema.
         contents: userPrompt,
         config: {
           systemInstruction,
-          temperature: 0.7,
           responseMimeType: 'application/json',
           responseSchema: {
             type: Type.OBJECT,
@@ -148,7 +147,6 @@ Generate structured JSON matching the exact schema.
         contents: userPrompt,
         config: {
           systemInstruction,
-          temperature: 0.7,
           responseMimeType: 'application/json'
         }
       });
@@ -302,7 +300,6 @@ Provide valid JSON with:
         contents: formattedContents,
         config: {
           systemInstruction,
-          temperature: 0.82,
           responseMimeType: 'application/json',
           responseSchema: {
             type: Type.OBJECT,
@@ -434,7 +431,6 @@ Respond with JSON matching:
       model: 'gemini-3.7-flash',
       contents: prompt,
       config: {
-        temperature: 0.7,
         responseMimeType: 'application/json'
       }
     });
@@ -486,8 +482,7 @@ Write a concise (2-3 sentences), warm, deeply insightful coaching response in Ar
       model: 'gemini-3.7-flash',
       contents: prompt,
       config: {
-        temperature: 0.75
-      }
+        }
     });
     return response.text?.trim() || defaultFeedback;
   } catch {
@@ -684,7 +679,6 @@ Return ONLY a JSON object matching this schema:
       model: 'gemini-3.7-flash',
       contents: prompt,
       config: {
-        temperature: 0.7,
         responseMimeType: 'application/json'
       }
     });
@@ -761,8 +755,7 @@ Acknowledge what they did, validate their cognitive/emotional courage, and highl
       model: 'gemini-3.7-flash',
       contents: prompt,
       config: {
-        temperature: 0.75
-      }
+        }
     });
     return response.text?.trim() || defaultFeedback;
   } catch {

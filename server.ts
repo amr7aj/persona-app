@@ -2,6 +2,7 @@ import "dotenv/config";
 import cors from "cors";
 import { randomUUID } from "crypto";
 import express from "express";
+import { z } from "zod";
 import path from "path";
 import { createServer as createViteServer } from "vite";
 import { Db } from "./server/db";
@@ -24,10 +25,10 @@ import {
 import { ARCHETYPES } from "./src/data/archetypesData";
 import { StoredAnalysisResult } from "./server/types";
 import { PersonalGoal } from "./src/types";
-import { getAuthenticatedUser } from "./server/supabase";
+import { getAuthenticatedUser, getSupabaseAuth } from "./server/supabase";
 async function startServer() {
   const app = express();
-
+  app.set("trust proxy", 1);
 
   const PORT = Number(process.env.PORT || 3000);
   // =========================================================
@@ -39,8 +40,8 @@ async function startServer() {
   // =========================================================
 
   const configuredOrigins = [
-    process.env.APP_URL,
-    process.env.CORS_ORIGIN,
+    ...(process.env.APP_URL ? [process.env.APP_URL] : []),
+    ...(process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(",") : []),
 
     // Local web development
     `http://localhost:${PORT}`,
@@ -53,13 +54,12 @@ async function startServer() {
     // Capacitor
     "capacitor://localhost",
     "https://localhost",
-
-    // Common Capacitor Android local origins
     "http://localhost:8080",
     "https://localhost:8080",
   ]
     .filter(Boolean)
-    .map((origin) => String(origin).replace(/\/$/, ""));
+    .map((origin) => String(origin).trim().replace(/\/$/, ""))
+    .filter((origin, index, all) => all.indexOf(origin) === index);
 
   app.use((req, res, next) => {
     const origin = req.headers.origin
@@ -93,7 +93,52 @@ async function startServer() {
     next();
   });
 
-  app.use(express.json({ limit: "10mb" }));
+  app.use(express.json({ limit: "1mb" }));
+
+  // Basic security headers without adding a new dependency.
+  app.use((_req, res, next) => {
+    res.setHeader("X-Content-Type-Options", "nosniff");
+    res.setHeader("X-Frame-Options", "DENY");
+    res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+    res.setHeader("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
+    next();
+  });
+
+  // Lightweight in-memory rate limiting for authentication endpoints.
+  // This is intentionally dependency-free; Railway can still add an edge/WAF
+  // limiter later without changing the application contract.
+  const rateBuckets = new Map<string, { count: number; resetAt: number }>();
+  const rateLimit = (limit: number, windowMs: number) =>
+    (req: express.Request, res: express.Response, next: express.NextFunction) => {
+      const nowMs = Date.now();
+      const key = `${req.ip}:${req.path}`;
+      const current = rateBuckets.get(key);
+      if (!current || nowMs >= current.resetAt) {
+        rateBuckets.set(key, { count: 1, resetAt: nowMs + windowMs });
+        return next();
+      }
+      if (current.count >= limit) {
+        res.setHeader("Retry-After", Math.ceil((current.resetAt - nowMs) / 1000));
+        return sendError(res, "Too many requests. Please try again later.", 429);
+      }
+      current.count += 1;
+      return next();
+    };
+
+  const loginSchema = z.object({
+    identifier: z.string().trim().min(1).max(320).optional(),
+    email: z.string().trim().email().max(320).optional(),
+    password: z.string().min(1).max(128),
+  }).refine((v) => Boolean(v.identifier || v.email), { message: "Login identifier is required" });
+
+  const registerSchema = z.object({
+    email: z.string().trim().email().max(320),
+    password: z.string().min(6).max(128),
+    firstName: z.string().trim().min(1).max(100),
+    lastName: z.string().trim().max(100).optional(),
+    username: z.string().trim().max(100).optional(),
+    language: z.enum(["ar", "en"]).optional(),
+  });
 
   // Helper response wrapper
   const sendSuccess = (res: express.Response, data: any, message?: string) => {
@@ -137,10 +182,13 @@ async function startServer() {
   // 2. AUTHENTICATION & TELEGRAM / EMAIL / PASSWORD
   // ==========================================
 
-  app.post("/api/auth/register", async (req, res) => {
+  app.post("/api/auth/register", rateLimit(5, 60_000), async (req, res) => {
     try {
-      const { email, password, firstName, lastName, username, language } =
-        req.body;
+      const parsed = registerSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return sendError(res, parsed.error.issues[0]?.message || "Invalid registration data", 400);
+      }
+      const { email, password, firstName, lastName, username, language } = parsed.data;
 
       if (!firstName || !String(firstName).trim()) {
         return sendError(
@@ -184,9 +232,13 @@ async function startServer() {
     }
   });
 
-  app.post("/api/auth/login", async (req, res) => {
+  app.post("/api/auth/login", rateLimit(10, 60_000), async (req, res) => {
     try {
-      const { identifier, email, password } = req.body;
+      const parsed = loginSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return sendError(res, "يرجى إدخال البريد/اسم المستخدم وكلمة المرور", 400);
+      }
+      const { identifier, email, password } = parsed.data;
 
       const loginIdentifier = identifier || email;
       if (!loginIdentifier || !String(loginIdentifier).trim() || !password) {
@@ -222,7 +274,142 @@ async function startServer() {
     }
   });
 
-  app.post("/api/auth/refresh", async (req, res) => {
+  // One-time legacy migration endpoint.
+  // This is intentionally protected by a server-only secret and is NOT part
+  // of the normal login flow. Use it only for accounts that existed before
+  // Supabase Auth became the single source of truth.
+  app.get("/api/auth/me", async (req, res) => {
+    try {
+      const header = req.headers.authorization || "";
+      const token = header.startsWith("Bearer ") ? header.slice(7).trim() : "";
+
+      if (!token) {
+        return sendError(res, "Unauthorized", 401);
+      }
+
+      const authUser = await getAuthenticatedUser(token);
+      if (!authUser) {
+        return sendError(res, "Unauthorized", 401);
+      }
+
+      const user = await Db.getUser(authUser.id);
+      if (!user) {
+        return sendError(res, "User profile not found", 404);
+      }
+
+      return sendSuccess(res, user);
+    } catch (err: any) {
+      console.error("[API Auth Me]", err);
+      return sendError(res, "Failed to load authenticated user", 401);
+    }
+  });
+
+  app.post("/api/auth/repair-legacy", async (req, res) => {
+    try {
+      const migrationSecret = String(process.env.PERSONA_MIGRATION_SECRET || "").trim();
+      const providedSecret = String(req.headers["x-persona-migration-secret"] || "").trim();
+
+      if (!migrationSecret || providedSecret !== migrationSecret) {
+        return sendError(res, "Forbidden", 403);
+      }
+
+      const { userId, password } = req.body || {};
+      if (!userId || !password || String(password).length < 6) {
+        return sendError(res, "userId and a password of at least 6 characters are required", 400);
+      }
+
+      const legacyUser = await Db.getUser(String(userId));
+      if (!legacyUser?.email) {
+        return sendError(res, "Legacy user or email not found", 404);
+      }
+
+      const email = String(legacyUser.email).trim().toLowerCase();
+      const authAdmin = (await import("./server/supabase")).getSupabaseAuthAdmin();
+
+      // If Auth already contains this email, reset its password and repair the UUID.
+      let existingAuth: any | null = null;
+      const perPage = 1000;
+      for (let page = 1; page <= 100; page += 1) {
+        const { data: authList, error: authListError } =
+          await authAdmin.auth.admin.listUsers({ page, perPage });
+        if (authListError) throw authListError;
+
+        existingAuth = (authList.users || []).find(
+          (u) => u.email?.trim().toLowerCase() === email
+        ) || null;
+
+        if (existingAuth || (authList.users || []).length < perPage) break;
+      }
+
+      let authUser;
+      if (existingAuth) {
+        const { data, error } = await authAdmin.auth.admin.updateUserById(existingAuth.id, {
+          password: String(password),
+          email_confirm: true,
+        });
+        if (error || !data.user) throw error || new Error("Failed to repair Auth user");
+        authUser = data.user;
+      } else {
+        const { data, error } = await authAdmin.auth.admin.createUser({
+          email,
+          password: String(password),
+          email_confirm: true,
+          user_metadata: {
+            first_name: legacyUser.firstName,
+            last_name: legacyUser.lastName,
+            username: legacyUser.username,
+          },
+        });
+        if (error || !data.user) throw error || new Error("Failed to create Auth user");
+        authUser = data.user;
+      }
+
+      if (legacyUser.id !== authUser.id) {
+        await Db.rekeyUserId(legacyUser.id, authUser.id);
+      }
+
+      return sendSuccess(res, {
+        userId: authUser.id,
+        email,
+        repaired: true,
+      }, "Legacy account repaired");
+    } catch (err: any) {
+      console.error("[Legacy Auth Repair]", err);
+      return sendError(res, err.message || "Legacy account repair failed", 500);
+    }
+  });
+
+  app.post("/api/auth/logout", rateLimit(20, 60_000), async (req, res) => {
+    try {
+      const refreshToken = typeof req.body?.refreshToken === "string" ? req.body.refreshToken.trim() : "";
+      const accessToken = typeof req.body?.accessToken === "string" ? req.body.accessToken.trim() : "";
+
+      // Revoke the refresh session when possible. The client also clears its
+      // local tokens, so logout remains safe if the refresh token is already invalid.
+      if (refreshToken && accessToken) {
+        const auth = getSupabaseAuth();
+        const { data: authUser } = await auth.auth.getUser(accessToken);
+        if (authUser.user) {
+          const sessionClient = await import("@supabase/supabase-js");
+          const client = sessionClient.createClient(
+            String(process.env.SUPABASE_URL || ""),
+            String(process.env.SUPABASE_ANON_KEY || ""),
+            { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } }
+          );
+          await client.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
+          await client.auth.signOut();
+        }
+      }
+
+      return sendSuccess(res, { loggedOut: true }, "Logged out successfully");
+    } catch (err) {
+      console.error("[API Logout]", err);
+      // Logout is idempotent from the client's perspective.
+      return sendSuccess(res, { loggedOut: true }, "Logged out successfully");
+    }
+  });
+
+  app.post("/api/auth/refresh", rateLimit(20, 60_000), async (req, res) => {
     try {
       const { refreshToken } = req.body;
 
@@ -256,27 +443,65 @@ async function startServer() {
         "Session refreshed"
       );
     } catch (err: any) {
-      return sendError(res, "Failed to refresh session", 401, err.message);
+      return sendError(res, "Failed to refresh session", 401);
     }
   });
 
-  app.get("/api/auth/demo-accounts", async (req, res) => {
-    const stats = await Db.getAdminStats();
-  
-    const accounts = stats.users.map((u: any) => ({
-      id: u.id,
-      name: `${u.firstName} ${u.lastName || ""}`.trim(),
-      username: u.username,
-      email: u.email,
-      role: u.role,
-      level: u.level,
-      photoUrl: u.photoUrl,
-    }));
-  
-    return sendSuccess(res, accounts);
+  app.get("/api/auth/demo-accounts", (req, res) => {
+    if (process.env.PERSONA_DEMO_MODE !== "true") {
+      return sendError(res, "Demo mode is disabled", 404);
+    }
+
+    void Db.getAdminStats()
+      .then((stats) => {
+        const accounts = stats.users.map((u: any) => ({
+          id: u.id,
+          name: `${u.firstName} ${u.lastName || ""}`.trim(),
+          username: u.username,
+          role: u.role,
+          level: u.level,
+          photoUrl: u.photoUrl,
+        }));
+        return sendSuccess(res, accounts);
+      })
+      .catch((err) => {
+        console.error("[Demo Accounts]", err);
+        return sendError(res, "Failed to load demo accounts", 500);
+      });
   });
 
-  app.post("/api/auth/telegram", async (req, res) => {
+  app.post("/api/auth/demo-login", rateLimit(10, 60_000), async (req, res) => {
+    if (process.env.PERSONA_DEMO_MODE !== "true") {
+      return sendError(res, "Demo mode is disabled", 404);
+    }
+
+    const demoPassword = String(process.env.PERSONA_DEMO_PASSWORD || "");
+    const parsed = z.object({ userId: z.string().uuid() }).safeParse(req.body);
+    if (!parsed.success || !demoPassword) {
+      return sendError(res, "Demo login is not configured", 404);
+    }
+
+    try {
+      const target = await Db.getUser(parsed.data.userId);
+      if (!target?.email) return sendError(res, "Demo account not found", 404);
+
+      // Demo mode intentionally uses a server-side password so no credential
+      // is embedded in the browser bundle. Never enable this in production.
+      const login = await Db.loginUser(target.email, demoPassword);
+      if (!login) return sendError(res, "Demo login failed", 401);
+
+      return sendSuccess(res, {
+        user: login.user,
+        token: login.accessToken,
+        refreshToken: login.refreshToken,
+      }, "Demo login successful");
+    } catch (err) {
+      console.error("[Demo Login]", err);
+      return sendError(res, "Demo login failed", 500);
+    }
+  });
+
+  app.post("/api/auth/telegram", rateLimit(20, 60_000), async (req, res) => {
     try {
       const { initData } = req.body;
 
@@ -372,7 +597,7 @@ async function startServer() {
     } catch (err: any) {
       console.error("[API Telegram Auth] Error:", err);
 
-      return sendError(res, "Authentication failed", 500, err.message);
+      return sendError(res, "Authentication failed", 500);
     }
   });
 
@@ -386,7 +611,12 @@ async function startServer() {
       req.path === "/auth/register" ||
       req.path === "/auth/login" ||
       req.path === "/auth/refresh" ||
+      req.path === "/auth/logout" ||
+      req.path === "/auth/me" ||
+      req.path === "/auth/repair-legacy" ||
       req.path === "/auth/telegram" ||
+      req.path === "/auth/demo-accounts" ||
+      req.path === "/auth/demo-login" ||
       req.path === "/questions" ||
       req.path === "/telegram/webhook"
     ) {
@@ -495,7 +725,32 @@ async function startServer() {
       return sendError(res, "Missing userId", 400);
     }
 
-    const updated = await Db.updateUser(userId, updates);
+    const authUserId = (req as any).authUserId as string | undefined;
+    if (!authUserId) {
+      return sendError(res, "Unauthorized", 401);
+    }
+
+    const actor = await Db.getUser(authUserId);
+    const isAdmin = !!actor && ["admin", "super_admin"].includes(actor.role);
+    if (userId !== authUserId && !isAdmin) {
+      return sendError(res, "Forbidden", 403);
+    }
+
+    const parsedUpdates = z.object({
+      firstName: z.string().trim().min(1).max(100).optional(),
+      lastName: z.string().trim().max(100).nullable().optional(),
+      username: z.string().trim().max(100).nullable().optional(),
+      photoUrl: z.string().url().max(2048).nullable().optional(),
+      language: z.enum(["ar", "en"]).optional(),
+      onboardingCompleted: z.boolean().optional(),
+      onboardingData: z.record(z.string(), z.unknown()).optional(),
+    }).safeParse(updates || {});
+
+    if (!parsedUpdates.success) {
+      return sendError(res, "Invalid profile update", 400);
+    }
+
+    const updated = await Db.updateUser(userId, parsedUpdates.data);
 
     if (!updated) {
       return sendError(res, "User not found", 404);
@@ -619,7 +874,7 @@ async function startServer() {
     } catch (err: any) {
       console.error("[API Analyze] Error:", err);
 
-      return sendError(res, "Failed to complete analysis", 500, err.message);
+      return sendError(res, "Failed to complete analysis", 500);
     }
   });
 
@@ -689,6 +944,14 @@ async function startServer() {
 
     if (!user) {
       return sendError(res, "User not found", 404);
+    }
+
+    const actor = await Db.getUser((req as any).authUserId);
+    const isAdmin = !!actor && ["admin", "super_admin"].includes(actor.role);
+    const allowSelfUpgrade = process.env.PERSONA_ALLOW_SELF_UPGRADE === "true";
+
+    if (!isAdmin && !allowSelfUpgrade) {
+      return sendError(res, "Premium purchases are not configured", 501);
     }
 
     const updated = await Db.updateUser(userId, {
@@ -843,7 +1106,7 @@ async function startServer() {
     } catch (err: any) {
       console.error("[API Goals Error]:", err);
 
-      return sendError(res, "Failed to create goal", 500, err.message);
+      return sendError(res, "Failed to create goal", 500);
     }
   });
 
@@ -897,7 +1160,7 @@ async function startServer() {
     } catch (err: any) {
       console.error("[API Goal Check-in Error]:", err);
 
-      return sendError(res, "Failed to record check-in", 500, err.message);
+      return sendError(res, "Failed to record check-in", 500);
     }
   });
 
@@ -960,7 +1223,7 @@ async function startServer() {
     } catch (err: any) {
       console.error("[API Refresh Prompt Error]:", err);
 
-      return sendError(res, "Failed to refresh AI prompt", 500, err.message);
+      return sendError(res, "Failed to refresh AI prompt", 500);
     }
   });
 
@@ -1028,8 +1291,7 @@ async function startServer() {
       return sendError(
         res,
         "Failed to fetch active challenge",
-        500,
-        err.message
+        500
       );
     }
   });
@@ -1091,7 +1353,7 @@ async function startServer() {
     } catch (err: any) {
       console.error("[API Reroll Challenge Error]:", err);
 
-      return sendError(res, "Failed to reroll challenge", 500, err.message);
+      return sendError(res, "Failed to reroll challenge", 500);
     }
   });
 
@@ -1161,7 +1423,7 @@ async function startServer() {
     } catch (err: any) {
       console.error("[API Complete Challenge Error]:", err);
 
-      return sendError(res, "Failed to complete challenge", 500, err.message);
+      return sendError(res, "Failed to complete challenge", 500);
     }
   });
 
@@ -1178,8 +1440,7 @@ async function startServer() {
       return sendError(
         res,
         "Failed to fetch challenge history",
-        500,
-        err.message
+        500
       );
     }
   });
@@ -1189,7 +1450,24 @@ async function startServer() {
   // ==========================================
 
   app.post("/api/bot/command", async (req, res) => {
-    const { command, user } = req.body;
+    if (process.env.PERSONA_DEMO_MODE !== "true") {
+      return sendError(res, "Bot simulator is disabled", 404);
+    }
+
+    const parsed = z.object({
+      command: z.string().trim().max(200).optional(),
+      user: z.object({
+        id: z.number().int().positive(),
+        first_name: z.string().trim().min(1).max(100),
+        username: z.string().trim().max(100).optional(),
+        language_code: z.string().max(20).optional(),
+      }).optional(),
+    }).safeParse(req.body);
+    if (!parsed.success) {
+      return sendError(res, "Invalid bot simulator payload", 400);
+    }
+
+    const { command, user } = parsed.data;
 
     const appUrl =
       process.env.APP_URL || `${req.protocol}://${req.get("host")}`;
@@ -1268,8 +1546,7 @@ async function startServer() {
       return sendError(
         res,
         "Failed to process AI chat message",
-        500,
-        err.message
+        500
       );
     }
   });
@@ -1282,11 +1559,16 @@ async function startServer() {
 
   // Webhook for real Telegram Bot
   app.post("/api/telegram/webhook", async (req, res) => {
-    const update = req.body;
+    const configuredSecret = String(process.env.TELEGRAM_WEBHOOK_SECRET || "").trim();
+    const providedSecret = String(req.headers["x-telegram-bot-api-secret-token"] || "").trim();
 
-    console.log("[Telegram Webhook] Received update:", JSON.stringify(update));
+    if (!configuredSecret || providedSecret !== configuredSecret) {
+      return sendError(res, "Webhook not configured", 404);
+    }
 
-    res.sendStatus(200);
+    // Telegram update processing is not implemented in this project yet.
+    // Do not acknowledge arbitrary updates as successfully processed.
+    return sendError(res, "Telegram webhook processing is not configured", 501);
   });
 
   // ==========================================
@@ -1308,10 +1590,24 @@ async function startServer() {
       return;
     }
 
-    const { adminSecret, targetUserId, newRole } = req.body;
+    const parsed = z.object({
+      targetUserId: z.string().uuid(),
+      newRole: z.enum(["user", "premium", "moderator", "admin", "super_admin"]),
+    }).safeParse(req.body);
+    if (!parsed.success) {
+      return sendError(res, "Invalid role change request", 400);
+    }
 
-    if (!process.env.ADMIN_SECRET || adminSecret !== process.env.ADMIN_SECRET) {
-      return sendError(res, "Unauthorized admin action. Invalid secret.", 403);
+    const { targetUserId, newRole } = parsed.data;
+    const actor = await Db.getUser((req as any).authUserId);
+    if (!actor) {
+      return sendError(res, "Unauthorized", 401);
+    }
+    if ((newRole === "admin" || newRole === "super_admin") && actor.role !== "super_admin") {
+      return sendError(res, "Only a super admin can assign admin privileges", 403);
+    }
+    if (targetUserId === actor.id) {
+      return sendError(res, "You cannot change your own role", 400);
     }
 
     const updated = await Db.updateUser(targetUserId, {
@@ -1361,6 +1657,11 @@ async function startServer() {
       },
       "Broadcast sent successfully"
     );
+  });
+
+  // Favicon: keep the browser from requesting a missing /favicon.ico.
+  app.get("/favicon.ico", (_req, res) => {
+    res.sendFile(path.join(process.cwd(), "public", "favicon.svg"));
   });
 
   // ==========================================

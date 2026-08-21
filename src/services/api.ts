@@ -12,10 +12,57 @@ import {
   GrowthChallenge,
 } from "../types";
 
-const API_BASE_URL = String(
-  (import.meta as any).env?.VITE_API_BASE_URL ||
-    "https://persona-app-production-f193.up.railway.app"
-).replace(/\/$/, "");
+const configuredApiBaseUrl = String(
+  (import.meta as any).env?.VITE_API_BASE_URL || ""
+).trim().replace(/\/$/, "");
+
+// In local development the Express server and Vite share the same origin.
+// Keeping this same-origin by default prevents a local browser session from
+// accidentally sending credentials to the production Railway API.
+// For production/Capacitor builds, set VITE_API_BASE_URL to the deployed API.
+const API_BASE_URL =
+  (import.meta as any).env?.DEV === true
+    ? ""
+    : configuredApiBaseUrl;
+
+let refreshPromise: Promise<string | null> | null = null;
+
+async function refreshAccessToken(): Promise<string | null> {
+  if (refreshPromise) return refreshPromise;
+
+  refreshPromise = (async () => {
+    const refreshToken = localStorage.getItem("persona_refresh_token");
+    if (!refreshToken) return null;
+
+    try {
+      const refreshRes = await fetch(`${API_BASE_URL}/api/auth/refresh`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ refreshToken }),
+      });
+      const refreshJson = await refreshRes.json();
+      if (!refreshRes.ok || !refreshJson.success || !refreshJson.data?.token) {
+        localStorage.removeItem("persona_token");
+        localStorage.removeItem("persona_refresh_token");
+        return null;
+      }
+
+      localStorage.setItem("persona_token", refreshJson.data.token);
+      if (refreshJson.data.refreshToken) {
+        localStorage.setItem("persona_refresh_token", refreshJson.data.refreshToken);
+      }
+      return refreshJson.data.token as string;
+    } catch {
+      localStorage.removeItem("persona_token");
+      localStorage.removeItem("persona_refresh_token");
+      return null;
+    } finally {
+      refreshPromise = null;
+    }
+  })();
+
+  return refreshPromise;
+}
 async function fetchJson<T>(url: string, options?: RequestInit): Promise<T> {
   const token =
     typeof window !== "undefined"
@@ -31,39 +78,30 @@ async function fetchJson<T>(url: string, options?: RequestInit): Promise<T> {
     },
   });
 
+  const isAuthEndpoint =
+    url === "/api/auth/login" ||
+    url === "/api/auth/register" ||
+    url === "/api/auth/refresh" ||
+    url === "/api/auth/logout" ||
+    url === "/api/auth/telegram" ||
+    url === "/api/auth/me" ||
+    url === "/api/auth/repair-legacy";
+
   if (
     res.status === 401 &&
     typeof window !== "undefined" &&
-    url !== "/api/auth/refresh"
+    !isAuthEndpoint
   ) {
-    const refreshToken = localStorage.getItem("persona_refresh_token");
-    if (refreshToken) {
-      try {
-        const refreshRes = await fetch(`${API_BASE_URL}/api/auth/refresh`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ refreshToken }),
-        });
-        const refreshJson = await refreshRes.json();
-        if (refreshRes.ok && refreshJson.success && refreshJson.data?.token) {
-          localStorage.setItem("persona_token", refreshJson.data.token);
-          if (refreshJson.data.refreshToken)
-            localStorage.setItem(
-              "persona_refresh_token",
-              refreshJson.data.refreshToken
-            );
-          res = await fetch(`${API_BASE_URL}${url}`, {
-            ...options,
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${refreshJson.data.token}`,
-              ...(options?.headers || {}),
-            },
-          });
-        }
-      } catch {
-        /* fall through to the original 401 */
-      }
+    const newToken = await refreshAccessToken();
+    if (newToken) {
+      res = await fetch(`${API_BASE_URL}${url}`, {
+        ...options,
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${newToken}`,
+          ...(options?.headers || {}),
+        },
+      });
     }
   }
 
@@ -108,8 +146,8 @@ export const Api = {
   },
 
   async registerUser(payload: {
-    email?: string;
-    password?: string;
+    email: string;
+    password: string;
     firstName: string;
     lastName?: string;
     username?: string;
@@ -131,7 +169,7 @@ export const Api = {
 
   async loginUser(payload: {
     identifier: string;
-    password?: string;
+    password: string;
   }): Promise<{ user: UserProfile; token: string }> {
     const res = await fetchJson<{ user: UserProfile; token: string }>(
       "/api/auth/login",
@@ -144,6 +182,35 @@ export const Api = {
     localStorage.setItem("persona_token", res.token);
     if ((res as any).refreshToken)
       localStorage.setItem("persona_refresh_token", (res as any).refreshToken);
+    return res;
+  },
+
+  async logout(): Promise<void> {
+    const accessToken = localStorage.getItem("persona_token") || "";
+    const refreshToken = localStorage.getItem("persona_refresh_token") || "";
+    try {
+      await fetchJson("/api/auth/logout", {
+        method: "POST",
+        body: JSON.stringify({ accessToken, refreshToken }),
+      });
+    } finally {
+      localStorage.removeItem("persona_token");
+      localStorage.removeItem("persona_refresh_token");
+      localStorage.removeItem("persona_active_user_id");
+    }
+  },
+
+  async getCurrentUser(): Promise<UserProfile> {
+    return fetchJson<UserProfile>("/api/auth/me");
+  },
+
+  async demoLogin(userId: string): Promise<{ user: UserProfile; token: string; refreshToken?: string }> {
+    const res = await fetchJson<{ user: UserProfile; token: string; refreshToken?: string }>(
+      "/api/auth/demo-login",
+      { method: "POST", body: JSON.stringify({ userId }) }
+    );
+    localStorage.setItem("persona_token", res.token);
+    if (res.refreshToken) localStorage.setItem("persona_refresh_token", res.refreshToken);
     return res;
   },
 
@@ -399,13 +466,12 @@ export const Api = {
   },
 
   async updateAdminRole(
-    adminSecret: string,
     targetUserId: string,
     newRole: string
   ): Promise<UserProfile> {
     return fetchJson("/api/admin/role", {
       method: "POST",
-      body: JSON.stringify({ adminSecret, targetUserId, newRole }),
+      body: JSON.stringify({ targetUserId, newRole }),
     });
   },
 

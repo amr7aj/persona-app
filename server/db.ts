@@ -1,5 +1,5 @@
 import { randomUUID } from "crypto";
-import { getSupabaseAdmin, getSupabaseAuth } from "./supabase";
+import { getSupabaseAdmin, getSupabaseAuth, getSupabaseAuthAdmin } from "./supabase";
 
 import {
   ServerUser,
@@ -57,6 +57,37 @@ function getUserSettings(row: any): Record<string, any> | undefined {
   const settings = getCustomSettings(row);
 
   return settings.userSettings || undefined;
+}
+
+async function findAuthUserByEmail(email: string): Promise<any | null> {
+  const normalized = clean(email).toLowerCase();
+  if (!normalized) return null;
+
+  const admin = getSupabaseAuthAdmin();
+
+  // Supabase admin.listUsers is paginated. Never assume the target account is
+  // inside the first 1000 Auth users. Stop as soon as the requested email is
+  // found or the returned page is smaller than the page size.
+  const perPage = 1000;
+
+  for (let page = 1; page <= 100; page += 1) {
+    const { data, error } = await admin.auth.admin.listUsers({
+      page,
+      perPage,
+    });
+
+    if (error) throw error;
+
+    const users = data.users || [];
+    const match = users.find(
+      (u) => (u.email || "").trim().toLowerCase() === normalized
+    );
+
+    if (match) return match;
+    if (users.length < perPage) break;
+  }
+
+  return null;
 }
 
 function createReferralCode(): string {
@@ -188,6 +219,7 @@ export const Db = {
     }
 
     let userId: string;
+    let telegramPassword: string;
 
     const { data: existing, error: existingError } = await s()
       .from("users")
@@ -203,6 +235,47 @@ export const Db = {
       userId = existing.id;
 
       const existingSettings = getCustomSettings(existing);
+      let accountEmail = clean(existing.email).toLowerCase();
+      if (!accountEmail) {
+        accountEmail = `telegram_${telegramUser.id}@telegram.persona.local`;
+      }
+
+      // Existing Telegram accounts may pre-date Supabase Auth. Ensure that
+      // exactly one Auth identity exists before creating the session.
+      let authUser = await findAuthUserByEmail(accountEmail);
+      telegramPassword = `${randomUUID()}A1!`;
+
+      if (!authUser) {
+        const { data: createdAuth, error: createAuthError } =
+          await getSupabaseAuthAdmin().auth.admin.createUser({
+            email: accountEmail,
+            password: telegramPassword,
+            email_confirm: true,
+            user_metadata: {
+              telegram_id: telegramUser.id,
+              first_name: telegramUser.first_name,
+              last_name: telegramUser.last_name,
+              username: telegramUser.username,
+            },
+          });
+
+        if (createAuthError || !createdAuth.user) {
+          throw createAuthError || new Error("Failed to create Telegram Auth user");
+        }
+        authUser = createdAuth.user;
+      } else {
+        const { error: updateAuthError } =
+          await getSupabaseAuthAdmin().auth.admin.updateUserById(authUser.id, {
+            password: telegramPassword,
+            email_confirm: true,
+          });
+        if (updateAuthError) throw updateAuthError;
+      }
+
+      if (userId !== authUser.id) {
+        await Db.rekeyUserId(userId, authUser.id);
+        userId = authUser.id;
+      }
 
       const { data, error } = await s()
         .from("users")
@@ -219,6 +292,8 @@ export const Db = {
             ? "en"
             : existing.language || "ar",
 
+          email: accountEmail,
+
           updated_at: now(),
 
           custom_settings: existingSettings,
@@ -233,13 +308,13 @@ export const Db = {
     } else {
       const syntheticEmail = `telegram_${telegramUser.id}@telegram.persona.local`;
 
-      const temporaryPassword = `${randomUUID()}A1!`;
+      telegramPassword = `${randomUUID()}A1!`;
 
       const { data: authData, error: authError } =
-        await s().auth.admin.createUser({
+        await getSupabaseAuthAdmin().auth.admin.createUser({
           email: syntheticEmail,
 
-          password: temporaryPassword,
+          password: telegramPassword,
 
           email_confirm: true,
 
@@ -305,24 +380,12 @@ export const Db = {
         });
 
       if (error) {
-        await s().auth.admin.deleteUser(userId);
+        await getSupabaseAuthAdmin().auth.admin.deleteUser(userId);
 
         throw error;
       }
     }
 
-    const temporaryPassword = `${randomUUID()}A1!`;
-
-    const { error: passwordError } = await s().auth.admin.updateUserById(
-      userId,
-      {
-        password: temporaryPassword,
-      }
-    );
-
-    if (passwordError) {
-      throw passwordError;
-    }
 
     const { data: emailRow, error: emailError } = await s()
       .from("users")
@@ -344,7 +407,7 @@ export const Db = {
       await getSupabaseAuth().auth.signInWithPassword({
         email,
 
-        password: temporaryPassword,
+        password: telegramPassword,
       });
 
     if (sessionError || !sessionData.session) {
@@ -1004,6 +1067,19 @@ export const Db = {
     }
   },
 
+  async rekeyUserId(oldUserId: string, newUserId: string): Promise<void> {
+    if (!isUuid(oldUserId) || !isUuid(newUserId) || oldUserId === newUserId) return;
+
+    const { error } = await s().rpc("rekey_persona_user", {
+      p_old_id: oldUserId,
+      p_new_id: newUserId,
+    });
+
+    if (error) {
+      throw error;
+    }
+  },
+
   async registerUser(payload: {
     email?: string;
     password?: string;
@@ -1033,32 +1109,34 @@ export const Db = {
     if (password.length < 6) {
       throw new Error("كلمة المرور يجب أن تكون 6 أحرف على الأقل");
     }
-
-    const { data: existingEmail } = await s()
+    // Check both application DB and Supabase Auth before creating the account.
+    const { data: existingRows, error: existingDbError } = await s()
       .from("users")
-      .select("id")
-      .ilike("email", email)
-      .maybeSingle();
+      .select("id,email")
+      .eq("email", email)
+      .limit(1);
 
-    if (existingEmail) {
+    if (existingDbError) {
+      throw existingDbError;
+    }
+
+    if (existingRows && existingRows.length > 0) {
       throw new Error("هذا البريد الإلكتروني مستخدم مسبقاً");
     }
 
-    const { data: auth, error: authError } = await s().auth.admin.createUser({
-      email,
-
-      password,
-
-      email_confirm: true,
-
-      user_metadata: {
-        first_name: firstName,
-
-        last_name: lastName || undefined,
-
-        username: username || undefined,
-      },
-    });
+    // Supabase Auth is the source of truth for credentials.
+    // The service-role client is used only for server-side admin operations.
+    const { data: auth, error: authError } =
+      await getSupabaseAuthAdmin().auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true,
+        user_metadata: {
+          first_name: firstName,
+          last_name: lastName || undefined,
+          username: username || undefined,
+        },
+      });
 
     if (authError || !auth.user) {
       throw authError || new Error("Registration failed");
@@ -1109,7 +1187,7 @@ export const Db = {
       });
 
     if (error) {
-      await s().auth.admin.deleteUser(auth.user.id);
+      await getSupabaseAuthAdmin().auth.admin.deleteUser(auth.user.id);
 
       throw error;
     }
@@ -1139,96 +1217,130 @@ export const Db = {
     refreshToken?: string;
   } | null> {
     const cleanId = clean(identifier).toLowerCase();
+    const cleanPassword = clean(password);
 
-    if (!cleanId || !password) {
-      return null;
-    }
+    if (!cleanId || !cleanPassword) return null;
 
     let email = cleanId;
+    let dbUserId: string | null = null;
 
+    // Email login. For username/referral/UUID login, resolve the canonical
+    // email from public.users first.
     if (!cleanId.includes("@")) {
       let row: any = null;
 
-      const { data: usernameRow } = await s()
+      const { data: usernameRow, error: usernameError } = await s()
         .from("users")
-        .select("email")
+        .select("id,email")
         .ilike("username", cleanId)
         .maybeSingle();
 
+      if (usernameError) throw usernameError;
       row = usernameRow;
 
       if (!row) {
-        const { data: referralRow } = await s()
+        const { data: referralRow, error: referralError } = await s()
           .from("users")
-          .select("email")
+          .select("id,email")
           .ilike("referral_code", cleanId)
           .maybeSingle();
-
+        if (referralError) throw referralError;
         row = referralRow;
       }
 
       if (!row && isUuid(cleanId)) {
-        const { data: uuidRow } = await s()
+        const { data: uuidRow, error: uuidError } = await s()
           .from("users")
-          .select("email")
+          .select("id,email")
           .eq("id", cleanId)
           .maybeSingle();
-
+        if (uuidError) throw uuidError;
         row = uuidRow;
       }
 
-      if (!row?.email) {
-        return null;
-      }
-
-      email = clean(row.email).toLowerCase();
+      if (!row?.email) return null;
+      email = String(row.email).trim().toLowerCase();
+      dbUserId = row.id;
+    } else {
+      const { data: row, error } = await s()
+        .from("users")
+        .select("id,email")
+        .eq("email", email)
+        .maybeSingle();
+      if (error) throw error;
+      if (row) dbUserId = row.id;
     }
 
+    // Credentials are verified only by Supabase Auth.
     const { data, error } = await getSupabaseAuth().auth.signInWithPassword({
       email,
-
-      password,
+      password: cleanPassword,
     });
 
     if (error || !data.user || !data.session) {
+      console.error("[LOGIN ERROR]", error?.message);
       return null;
     }
 
-    const { error: updateError } = await s()
-      .from("users")
-      .update({
-        updated_at: now(),
-
-        last_active_date: today(),
-      })
-      .eq("id", data.user.id);
-
-    if (updateError) {
-      console.error("[LOGIN ACTIVITY]", updateError.message);
+    // Critical integrity check: the application row MUST use the same UUID
+    // as auth.users. Never silently create a second identity here.
+    if (dbUserId && dbUserId !== data.user.id) {
+      // Legacy account: auth.users and public.users have the same email but
+      // different UUIDs. Move the application data to the Auth UUID.
+      await this.rekeyUserId(dbUserId, data.user.id);
     }
 
-    await this.logAudit(
-      "USER_LOGIN",
-      data.user.id,
-      "User logged in through Supabase Auth",
-      "success"
-    );
-
-    const user = await this.getUser(data.user.id);
+    let user = await this.getUser(data.user.id);
 
     if (!user) {
-      return null;
+      // Auth-only account: create its application profile now.
+      const meta = (data.user.user_metadata || {}) as Record<string, any>;
+      const referralCode = createReferralCode();
+
+      const { error: profileError } = await s().from("users").insert({
+        id: data.user.id,
+        email,
+        telegram_id: null,
+        first_name: clean(meta.first_name) || "User",
+        last_name: clean(meta.last_name) || null,
+        username: clean(meta.username).replace(/^@/, "") || null,
+        avatar_url: null,
+        language: meta.language === "en" ? "en" : "ar",
+        role: "user",
+        level: 1,
+        xp: 100,
+        current_streak: 1,
+        last_active_date: today(),
+        onboarding_completed: false,
+        referral_code: referralCode,
+        referred_by: null,
+        custom_settings: {},
+        badges: ["explorer"],
+        updated_at: now(),
+      });
+
+      if (profileError && profileError.code !== "23505") {
+        throw profileError;
+      }
+
+      user = await this.getUser(data.user.id);
     }
+
+    if (!user) return null;
+
+    await s()
+      .from("users")
+      .update({ updated_at: now(), last_active_date: today() })
+      .eq("id", data.user.id);
+
+    await this.logAudit("USER_LOGIN", user.id, "Login successful", "success");
 
     return {
       user,
-
       accessToken: data.session.access_token,
-
       refreshToken: data.session.refresh_token,
     };
   },
-
   async saveChatMessage(msg: StoredChatMessage): Promise<void> {
     const { error } = await s()
       .from("chat_history")
@@ -2118,7 +2230,7 @@ export const Db = {
       const perPage = 1000;
 
       while (true) {
-        const { data, error } = await getSupabaseAuth().auth.admin.listUsers({
+        const { data, error } = await getSupabaseAuthAdmin().auth.admin.listUsers({
           page,
 
           perPage,
