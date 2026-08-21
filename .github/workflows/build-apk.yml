@@ -9,6 +9,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: android-apk-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build-apk:
     name: Build PERSONA APK
@@ -31,10 +35,29 @@ jobs:
           cache: pnpm
           cache-dependency-path: pnpm-lock.yaml
 
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: gradle
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
       - name: Verify toolchain
         run: |
+          echo "Node:"
           node --version
+
+          echo "pnpm:"
           pnpm --version
+
+          echo "Java:"
+          java -version
+
+          echo "JAVA_HOME:"
+          echo "$JAVA_HOME"
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -45,24 +68,25 @@ jobs:
       - name: Build web application
         run: pnpm build
 
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: 17
-          cache: gradle
-
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-
       - name: Sync Capacitor
         run: pnpm exec cap sync android
 
+      - name: Ensure Gradle wrapper is executable
+        working-directory: android
+        run: chmod +x gradlew
+
+      - name: Verify Gradle environment
+        working-directory: android
+        run: ./gradlew --version
+
       - name: Build Android Debug APK
         working-directory: android
+        run: ./gradlew assembleDebug --no-daemon
+
+      - name: Verify APK exists
         run: |
-          chmod +x gradlew
-          ./gradlew assembleDebug
+          test -f android/app/build/outputs/apk/debug/app-debug.apk
+          ls -lh android/app/build/outputs/apk/debug/app-debug.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
